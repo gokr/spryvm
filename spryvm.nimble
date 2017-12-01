@@ -1,5 +1,5 @@
 # Package
-version       = "0.6.1"
+version       = "0.7.0"
 author        = "Göran Krampe"
 description   = "Homoiconic dynamic language interpreter in Nim"
 license       = "MIT"
