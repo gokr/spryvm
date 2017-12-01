@@ -1,4 +1,0 @@
-#!/usr/bin/env spry
-
-lines = readLines "lotslines"
-echo ("Lines:" , (lines size print))

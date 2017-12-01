@@ -2,22 +2,22 @@
 export HERE="$(dirname "$(readlink -f "$0")")"
 
 # Core Spry
-echo "***************  Core Spry implementation **************"
-cloc --exclude-dir=nimcache --read-lang-def=$HERE/cloc-nim $HERE/../src
+echo "***************  Core Spry implementation  **************"
+cloc --exclude-dir=nimcache --read-lang-def=$HERE/cloc-nim $HERE/../spryvm
 echo
 echo
 echo
 
-# Spry extra modules
-echo "***************  Spry modules  **************"
-cloc --exclude-dir=nimcache --read-lang-def=$HERE/cloc-nim $HERE/../src/modules
+# Core Spry tests
+echo "***************  Core Spry tests  **************"
+cloc --exclude-dir=nimcache --read-lang-def=$HERE/cloc-nim $HERE/../tests
 echo
 echo
 echo
 
 # The rest
-echo "***************  Samples, tutorials, bench **************"
-cloc --exclude-ext=js --exclude-dir=nimcache --read-lang-def=$HERE/cloc-nim $HERE/../samples $HERE/../tutorials $HERE/../bench
+echo "***************  Examples  **************"
+cloc --exclude-ext=js --exclude-dir=nimcache --read-lang-def=$HERE/cloc-nim $HERE/../examples
 echo
 echo
 echo

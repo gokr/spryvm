@@ -1,11 +1,8 @@
 # Package
 version       = "0.6.1"
 author        = "Göran Krampe"
-description   = "Homoiconic dynamic language in Nim"
+description   = "Homoiconic dynamic language interpreter in Nim"
 license       = "MIT"
-bin           = @["spry","ispry"]
-srcDir        = "src"
-binDir        = "bin"
 
 # Deps
 requires "nim >= 0.17.0"
