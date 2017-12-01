@@ -1,8 +1,9 @@
 # Package
-version       = "0.7.0"
+version       = "0.7.1"
 author        = "Göran Krampe"
 description   = "Homoiconic dynamic language interpreter in Nim"
 license       = "MIT"
+skipDirs      = @["examples", "examples/browser", "tests"]
 
 # Deps
 requires "nim >= 0.17.0"
