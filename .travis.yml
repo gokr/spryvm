@@ -70,7 +70,7 @@ before_script:
 script:
     # Let nimble get dependencies
     - nimble install
-    # Test
+    # Run tests
     - cd tests && ./run.sh
     # Optional: build docs.
     # nim doc --docSeeSrcUrl:https://github.com/AUTHOR/MYPROJECT/blob/master --project MYFILE.nim
