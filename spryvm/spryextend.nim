@@ -17,7 +17,7 @@ type
 
 method parseValue(self: MultilineStringValueParser, s: string): Node {.procvar.} =
   # If it ends and starts with ''' then ok, no escapes yet
-  if s[0..2] == "'''" and s[^3..^1] == "'''":
+  if s.len > 2 and s[0..2] == "'''" and s[^3..^1] == "'''":
     result = newValue(s[3..^4])
 
 proc prefixLength(self: MultilineStringValueParser): int = 3
