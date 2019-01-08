@@ -269,6 +269,13 @@ method hash*(self: StringVal): Hash =
 method hash*(self: PointerVal): Hash =
   self.value.hash
 
+method hash*(self: Map): Hash =
+  const salt = hash("{=}")
+  var h = salt
+  for b in self.bindings.values:
+    h = h !& b.key.hash !& b.val.hash
+  result = !$h
+
 method `==`*(self: IntVal, other: Node): bool =
   other of IntVal and (self.value == IntVal(other).value)
 
