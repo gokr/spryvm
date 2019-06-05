@@ -605,19 +605,17 @@ proc currentKeyword(self: Parser): KeyWord =
   else:
     return nil
 
-proc closeKeyword(self: Parser)
-proc pop(self: Parser): Node =
-  if self.currentKeyword().notNil:
-    self.closeKeyword()
-  self.stack.pop()
-
-proc addNode(self: Parser)
 proc closeKeyword(self: Parser) =
   let keyword = self.currentKeyword()
   discard self.stack.pop()
   let nodes = keyword.produceNodes()
   SeqComposite(self.top).removeLast()
   SeqComposite(self.top).add(nodes)
+
+proc pop(self: Parser): Node =
+  if self.currentKeyword().notNil:
+    self.closeKeyword()
+  self.stack.pop()
 
 proc doAddNode(self: Parser, node: Node) =
   # If we are collecting a keyword, we get nil until its ready
