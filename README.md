@@ -35,7 +35,7 @@ The following should work on a Ubuntu/Debian, adapt accordingly for other distro
 
 3. Clone this repo. Then run `nimble install` in it.
 
-4. Finally run all tests using `cd tests && ./run.sh` (runjs.sh is for running them in nodejs, but not fully green right now)
+4. Finally run all tests using `cd tests && ./run.sh` (runjs.sh is for running them in nodejs, but not fully green right now). Tests should be green for **Nim 0.20.2**.
 
 So now that you have installed Spry, you can proceed to play with the samples in the `examples` directory, see README in there for details.
 
