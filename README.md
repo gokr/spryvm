@@ -11,7 +11,7 @@ This is the VM for the [Spry language](http://sprylang.org), packaged as a Nim l
 
 # What is this?
 
-This is **not where you start out with Spry**, instead take a look at [the language website](http://sprylang.org) and install the [Spry](http://github.com/gokr/spry) nimble package that in turn **depends** on this package to implement usable Spry interpreters.
+This is **not where you start out with Spry**, instead take a look at [the language website](http://sprylang.org) and install the [Spry](http://github.com/gokr /spry) nimble package that in turn **depends** on this package to implement usable Spry interpreters.
 
 # Installation
 
