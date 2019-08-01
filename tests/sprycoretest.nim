@@ -416,6 +416,7 @@ suite "spry core":
     check run("x = 0 1 to: 3 do: [..x = (x + :y)] x ") == "6"
     check run("y = [] -2 to: 2 do: [y add: :n] y") == "[-2 -1 0 1 2]"
     check run("x = [] 1 to: 3 do: [x add: :y] x ") == "[1 2 3]"
+    check run("x = [] 3 to: 1 by: -1 do: [x add: :y] x ") == "[3 2 1]"
 
   test "map":
     # Maps and Words, all variants should end up as same key
