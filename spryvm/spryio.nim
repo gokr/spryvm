@@ -20,6 +20,9 @@ proc addIO*(spry: Interpreter) =
     let fn = StringVal(evalArg(spry)).value
     let contents = readFile(fn).string
     newValue(contents)
+  nimFunc("removeFile"):
+    let fn = StringVal(evalArg(spry)).value
+    removeFile(fn)
   nimFunc("writeFile"):
     let fn = StringVal(evalArg(spry)).value
     result = evalArg(spry)
