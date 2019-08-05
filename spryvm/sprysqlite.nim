@@ -43,7 +43,7 @@ proc addSqlite*(spry: Interpreter) =
     let conn = node.conn
     let query = StringVal(evalArg(spry)).value
     let nodes = SeqComposite(evalArg(spry)).nodes
-    let stringValues: seq[string] = nodes.map(proc(x:Node): string = StringVal(x).value)
+    let stringValues = nodes.map(proc(x:Node): string = StringVal(x).value)
     let blok = newBlok()
     for row in conn.rows(sql(query), stringValues):
       var cols = row.map(proc(x:string): Node = StringVal(value: x))
