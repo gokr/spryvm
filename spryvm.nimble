@@ -9,16 +9,17 @@ skipDirs      = @["examples", "examples/browser", "tests"]
 requires "nim >= 0.20.2"
 requires "python"
 requires "ui"
-requires "nimsnappy"
+requires "snappy"
 
-when defined(nimdistros):
-  import distros
-  if detectOs(Ubuntu):
-    foreignDep "libsnappy-dev"
-  elif detectOs(MacOSX):
-    foreignDep "snappy"
-  elif detectOs(Windows):
-    foreignDep "snappy"
+# We do not need this using Nim native snappy package instead of C wrapper:
+# when defined(nimdistros):
+#  import distros
+#  if detectOs(Ubuntu):
+#    foreignDep "libsnappy-dev"
+#  elif detectOs(MacOSX):
+#    foreignDep "snappy"
+#  elif detectOs(Windows):
+#    foreignDep "snappy"
 
 task test, "Run the tests":
   withDir "tests":
