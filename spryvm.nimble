@@ -11,16 +11,6 @@ requires "python"
 requires "ui"
 requires "snappy"
 
-# We do not need this using Nim native snappy package instead of C wrapper:
-# when defined(nimdistros):
-#  import distros
-#  if detectOs(Ubuntu):
-#    foreignDep "libsnappy-dev"
-#  elif detectOs(MacOSX):
-#    foreignDep "snappy"
-#  elif detectOs(Windows):
-#    foreignDep "snappy"
-
 task test, "Run the tests":
   withDir "tests":
     exec "nim c -r all"
