@@ -209,10 +209,13 @@ proc addUI*(spry: Interpreter) =
     let height = IntVal(evalArg(spry)).value
     let hasBar = BoolVal(evalArg(spry)).value
     WindowNode(widget: newWindow(title, width, height, hasBar))
-  nimMeth("windowMargined:"):
-    var node = WindowNode(evalArgInfix(spry))
+  nimMeth("margined:"):
+    var node = Node(evalArgInfix(spry))
     let margined = BoolVal(evalArg(spry)).value
-    Window(node.widget).margined = margined
+    if node of WindowNode:
+      Window(node.widget).margined = margined
+    elif node of GroupNode:
+      Group(node.widget).margined = margined
     return node
   nimMeth("onClosingShouldClose:"):
     var node = WindowNode(evalArgInfix(spry))
@@ -243,11 +246,6 @@ proc addUI*(spry: Interpreter) =
   nimFunc("newGroup"):
     let title = StringVal(evalArg(spry)).value
     GroupNode(widget: newGroup(title))
-  nimMeth("groupMargined:"):
-    var node = GroupNode(evalArgInfix(spry))
-    var margined = BoolVal(evalArg(spry)).value
-    Group(node.widget).margined = margined
-    return node
 
   # MultilineEntry
   nimFunc("newMultilineEntryText"):
