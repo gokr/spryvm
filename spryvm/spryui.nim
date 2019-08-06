@@ -210,7 +210,7 @@ proc addUI*(spry: Interpreter) =
     let hasBar = BoolVal(evalArg(spry)).value
     WindowNode(widget: newWindow(title, width, height, hasBar))
   nimMeth("margined:"):
-    var node = Node(evalArgInfix(spry))
+    var node = WidgetNode(evalArgInfix(spry))
     let margined = BoolVal(evalArg(spry)).value
     if node of WindowNode:
       Window(node.widget).margined = margined
