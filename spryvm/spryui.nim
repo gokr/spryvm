@@ -5,9 +5,9 @@ import ui
 type
   WidgetNode = ref object of Value
     widget*: Widget
-    # spry*: Interpreter # We send a pointer to the Window along with callbacks
   WindowNode* = ref object of WidgetNode
-    onClosing*: Blok   # Blok to run onClosing event
+    onClosing*: Blok
+  EntryNode = ref object of WidgetNode
   MultilineEntryNode = ref object of WidgetNode
     onChanged*: Blok
   BoxNode = ref object of WidgetNode
@@ -20,7 +20,6 @@ type
   MenuItemNode = ref object of WidgetNode
     onClicked*: Blok
 
-# Useful during playing around with this
 method type*(self: WidgetNode): string {.base.} =
   "WidgetNode"
 method `$`*(self: WindowNode): string =
@@ -33,40 +32,89 @@ method `$`*(self: GroupNode): string =
   "GroupNode"
 method `$`*(self: ButtonNode): string =
   "ButtonNode"
+method `$`*(self: MenuNode): string =
+  "MenuNode"
+method `$`*(self: MenuItemNode): string =
+  "MenuItemNode"
 
+# Polymorphic setChild (because generics can't be used)
+method setChild*(self: WidgetNode, child: WidgetNode) {.base.} =
+  return
+method setChild*(self: WindowNode, child: EntryNode) =
+  Window(self.widget).setChild(Entry(child.widget))
+method setChild*(self: WindowNode, child: MultilineEntryNode) =
+  Window(self.widget).setChild(MultilineEntry(child.widget))
+method setChild*(self: WindowNode, child: BoxNode) =
+  Window(self.widget).setChild(Box(child.widget))
+method setChild*(self: WindowNode, child: GroupNode) =
+  Window(self.widget).setChild(Group(child.widget))
+method setChild*(self: WindowNode, child: ButtonNode) =
+  Window(self.widget).setChild(Button(child.widget))
+
+method setChild*(self: GroupNode, child: EntryNode) =
+  Group(self.widget).child = Entry(child.widget)
+method setChild*(self: GroupNode, child: MultilineEntryNode) =
+  Group(self.widget).child = MultilineEntry(child.widget)
+method setChild*(self: GroupNode, child: BoxNode) =
+  Group(self.widget).child =Box(child.widget)
+method setChild*(self: GroupNode, child: GroupNode) =
+  Group(self.widget).child = Group(child.widget)
+method setChild*(self: GroupNode, child: ButtonNode) =
+  Group(self.widget).child = Button(child.widget)
+
+# Polymorphic text
+method text(self: WidgetNode, text: string) {.base.} =
+  return
+method text(self: WidgetNode): string {.base.} =
+  return
+method text(self: MultilineEntryNode, text: string) =
+  MultilineEntry(self.widget).text = text
+method text(self: MultilineEntryNode): string =
+  MultilineEntry(self.widget).text
+method text(self: ButtonNode, text: string) =
+  Button(self.widget).text = text
+method text(self: ButtonNode): string =
+  Button(self.widget).text
+
+# Polymorphic title
+method title(self: WidgetNode, title: string) {.base.} =
+  return
+method title(self: WidgetNode): string {.base.} =
+  return
+method title(self: WindowNode, title: string) =
+  Window(self.widget).title = title
+method title(self: WindowNode): string =
+  Window(self.widget).title
+method title(self: GroupNode, title: string) =
+  Group(self.widget).title = title
+method title(self: GroupNode): string =
+  Group(self.widget).title
+
+# Polymorphic readonly
+method readonly(self: WidgetNode, readonly: bool) {.base.} =
+  return
+method readonly(self: WidgetNode): bool {.base.} =
+  return
+method readonly(self: EntryNode, readonly: bool) =
+  Entry(self.widget).readonly = readonly
+method readonly(self: EntryNode): bool =
+  Entry(self.widget).readonly
+method readonly(self: MultilineEntryNode, readonly: bool) =
+  MultilineEntry(self.widget).readonly = readonly
+method readonly(self: MultilineEntryNode): bool =
+  MultilineEntry(self.widget).readonly
+
+# These nodes only return themselves
 method eval*(self: WidgetNode, spry: Interpreter): Node =
   self
 
-# Handlers
-#proc onClosing*(sender: ptr Window; data: pointer): cint {.cdecl.} =
-#  var node = cast[WindowNode](data)
-#  discard node.onClosing.evalDo(node.spry)
-#  return 0 #?
-
-#proc onChanged*(sender: ptr MultilineEntry; data: pointer) {.cdecl.} =
-#  var node = cast[MultilineEntryNode](data)
-#  discard node.onChanged.evalDo(node.spry)
-
-#proc onClicked*(sender: ptr Button; data: pointer) {.cdecl.} =
-#  var node = cast[ButtonNode](data)
-#  discard node.onClicked.evalDo(node.spry)
-
-#proc onClicked*(sender: ptr MenuItem; window: ptr Window; data: pointer) {.cdecl.} =
-#  var node = cast[MenuItemNode](data)
-#  discard node.onClicked.evalDo(node.spry)
-
-#proc onShouldQuit*(data: pointer): cint {.cdecl.} =
-#  var node = cast[MenuNode](data)
-#  discard node.onShouldQuit.evalDo(node.spry)
-
-
 # Spry UI module
 proc addUI*(spry: Interpreter) =
-  # libui
+  # libui startup, main loop and quit.
   nimFunc("uiInit"):
-    init()
+    ui.init()
   nimFunc("uiMain"):
-    mainLoop()
+    ui.mainLoop()
   nimFunc("uiQuit"):
     ui.quit()
 
@@ -94,179 +142,190 @@ proc addUI*(spry: Interpreter) =
     let node = MenuNode(evalArgInfix(spry))
     let name = StringVal(evalArg(spry)).value
     let blok = Blok(evalArg(spry))
-    let item = Menu(node.widget).addItem(name, proc() =
-      discard blok.evalDo(spry)
-    )
+    let item = Menu(node.widget).addItem(name, proc() = discard blok.evalDo(spry))
     MenuItemNode(widget: item, onClicked: blok)
-
-#  nimMeth("menuAppendCheckItem:"):
-#    let node = MenuNode(evalArgInfix(spry))
-#    let name = StringVal(evalArg(spry)).value
-#    MenuItemNode(control: menuAppendCheckItem(toUiMenu(node.control), name.cstring), spry: spry)
-#  nimMeth("menuAppendQuitItem"):
-#    let node = MenuNode(evalArgInfix(spry))
-#    MenuItemNode(control: menuAppendQuitItem(toUiMenu(node.control)), spry: spry)
-#  nimMeth("menuAppendPreferencesItem"):
-#    let node = MenuNode(evalArgInfix(spry))
-#    MenuItemNode(control: menuAppendPreferencesItem(toUiMenu(node.control)), spry: spry)
-#  nimMeth("menuAppendAboutItem"):
-#    let node = MenuNode(evalArgInfix(spry))
-#    MenuItemNode(control: menuAppendAboutItem(toUiMenu(node.control)), spry: spry)
-#  nimMeth("menuAppendSeparator"):
-#    let node = MenuNode(evalArgInfix(spry))
-#    menuAppendSeparator(toUiMenu(node.control))
-#    return node
-#  nimMeth("menuItemEnable"):
-#    let node = MenuItemNode(evalArgInfix(spry))
-#    menuItemEnable(toUiMenuItem(node.control))
-#    return node
-#  nimMeth("menuItemDisable"):
-#    let node = MenuItemNode(evalArgInfix(spry))
-#    menuItemDisable(toUiMenuItem(node.control))
-#    return node
-#  nimMeth("checked"):
-#    let node = MenuItemNode(evalArgInfix(spry))
-#    newValue(menuItemChecked(toUiMenuItem(node.control)).int)
-#  nimMeth("checked:"):
-#    let node = MenuItemNode(evalArgInfix(spry))
-#    let checked = BoolVal(evalArg(spry)).value
-#    menuItemSetChecked(toUiMenuItem(node.control), if checked: 1 else: 0)
-#    return node
-#  nimMeth("onMenuItemClicked:"):
-#    var node = MenuItemNode(evalArgInfix(spry))
-#    node.onClicked = Blok(evalArg(spry))
-#    menuItemOnClicked(toUiMenuItem(node.control), onClicked, cast[ptr MenuItemNode](node))
-#    return node
-#  nimMeth("onShouldQuit:"):
-#    var node = MenuNode(evalArgInfix(spry))
-#    node.onShouldQuit = Blok(evalArg(spry))
-#    onShouldQuit(onShouldQuit, cast[ptr MenuNode](node))
-#    return node
+  nimMeth("addCheckItem:onClicked:"):
+    let node = MenuNode(evalArgInfix(spry))
+    let name = StringVal(evalArg(spry)).value
+    let blok = Blok(evalArg(spry))
+    let item = Menu(node.widget).addCheckItem(name, proc() = discard blok.evalDo(spry))
+    MenuItemNode(widget: item, onClicked: blok)
+  nimMeth("addQuitItemShouldClose:"):
+    let node = MenuNode(evalArgInfix(spry))
+    let blok = Blok(evalArg(spry))
+    let item = Menu(node.widget).addQuitItem(proc(): bool {.closure.} =
+      var shouldClose = blok.evalDo(spry)
+      return BoolVal(shouldClose).value)
+    MenuItemNode(widget: item, onClicked: blok)
+  nimMeth("addPreferencesItemOnClicked:"):
+    let node = MenuNode(evalArgInfix(spry))
+    let blok = Blok(evalArg(spry))
+    let item = Menu(node.widget).addPreferencesItem(proc() = discard blok.evalDo(spry))
+    MenuItemNode(widget: item, onClicked: blok)
+  nimMeth("addAboutItemOnClicked:"):
+    let node = MenuNode(evalArgInfix(spry))
+    let blok = Blok(evalArg(spry))
+    let item = Menu(node.widget).addAboutItem(proc() = discard blok.evalDo(spry))
+    MenuItemNode(widget: item, onClicked: blok)
+  nimMeth("addSeparator"):
+    let node = MenuNode(evalArgInfix(spry))
+    Menu(node.widget).addSeparator()
+    return node
+  nimMeth("enable"):
+    let node = MenuItemNode(evalArgInfix(spry))
+    MenuItem(node.widget).enable
+    return node
+  nimMeth("disable"):
+    let node = MenuItemNode(evalArgInfix(spry))
+    MenuItem(node.widget).disable
+    return node
+  nimMeth("checked"):
+    let node = MenuItemNode(evalArgInfix(spry))
+    newValue(MenuItem(node.widget).checked)
+  nimMeth("checked:"):
+    let node = MenuItemNode(evalArgInfix(spry))
+    let checked = BoolVal(evalArg(spry)).value
+    MenuItem(node.widget).checked = checked
+    return node
 
   # Controls
-#  nimFunc("controlDestroy"):
-#    let node = WidgetNode(evalArg(spry))
-#    controlDestroy(node.control)
-#    return spry.nilVal
+  nimMeth("destroy"):
+    let node = WidgetNode(evalArgInfix(spry))
+    destroy(Window(node.widget))
+    return node
   nimMeth("show"):
     let node = WidgetNode(evalArgInfix(spry))
     show(Window(node.widget))
     return node
-#  nimMeth("hide"):
-#    let node = WidgetNode(evalArgInfix(spry))
-#    controlHide(node.control)
-#    return node
+  nimMeth("hide"):
+    let node = WidgetNode(evalArgInfix(spry))
+    hide(Window(node.widget))
+    return node
 
   # Window
-  nimFunc("newWindow"):
+  nimFunc("newWindow:width:height:hasBar:"):
     let title = StringVal(evalArg(spry)).value
     let width = IntVal(evalArg(spry)).value
     let height = IntVal(evalArg(spry)).value
     let hasBar = BoolVal(evalArg(spry)).value
     WindowNode(widget: newWindow(title, width, height, hasBar))
-#  nimMeth("windowMargin:"):
-#    var node = WindowNode(evalArgInfix(spry))
-#    let margin = IntVal(evalArg(spry)).value
-#    windowSetMargined(toUiWindow(node.control), margin.cint)
-#    return node
-#  nimMeth("onClosing:"):
-#    var node = WindowNode(evalArgInfix(spry))
-#    node.onClosing = Blok(evalArg(spry))
-#    windowOnClosing(toUiWindow(node.control), onClosing, cast[ptr WindowNode](node))
-#    return node
-#  nimMeth("message:title:"):
-#    var win = WindowNode(evalArgInfix(spry))
-#    let description = StringVal(evalArg(spry)).value
-#    let title = StringVal(evalArg(spry)).value
-#    msgBox(toUiWindow(win.control), title.cstring, description.cstring)
-#    return win
-#  nimMeth("error:title:"):
-#    var win = WindowNode(evalArgInfix(spry))
-#    let description = StringVal(evalArg(spry)).value
-#    let title = StringVal(evalArg(spry)).value
-#    msgBoxError(toUiWindow(win.control), title.cstring, description.cstring)
-#    return win
-#  nimFunc("windowSetChild:"):
-#    let win = WindowNode(evalArgInfix(spry))
-#    let node = WidgetNode(evalArg(spry))
-#    windowSetChild(cast[ptr Window](win.control), node.control)
-#    return win
+  nimMeth("windowMargined:"):
+    var node = WindowNode(evalArgInfix(spry))
+    let margined = BoolVal(evalArg(spry)).value
+    Window(node.widget).margined = margined
+    return node
+  nimMeth("onClosingShouldClose:"):
+    var node = WindowNode(evalArgInfix(spry))
+    node.onClosing = Blok(evalArg(spry))
+    Window(node.widget).onclosing = proc(): bool {.closure.} =
+      var shouldClose = node.onClosing.evalDo(spry)
+      return BoolVal(shouldClose).value
+    return node
+  nimMeth("message:title:"):
+    var win = WindowNode(evalArgInfix(spry))
+    let description = StringVal(evalArg(spry)).value
+    let title = StringVal(evalArg(spry)).value
+    Window(win.widget).msgBox(title, description)
+    return win
+  nimMeth("error:title:"):
+    var win = WindowNode(evalArgInfix(spry))
+    let description = StringVal(evalArg(spry)).value
+    let title = StringVal(evalArg(spry)).value
+    Window(win.widget).msgBoxError(title, description)
+    return win
+  nimFunc("setChild:"):
+    let self = WidgetNode(evalArgInfix(spry))
+    let child = WidgetNode(evalArg(spry))
+    self.setChild(child)
+    return self
 
    # Groups
-#  nimFunc("newGroup"):
-#    let title = StringVal(evalArg(spry)).value
-#    GroupNode(control: newGroup(title.cstring), spry: spry)
-#  nimFunc("groupSetChild:"):
-#    let group = GroupNode(evalArgInfix(spry))
-#    let node = WidgetNode(evalArg(spry))
-#    groupSetChild(toUiGroup(group.control), node.control)
-#    return group
-#  nimMeth("groupMargin:"):
-#    var node = GroupNode(evalArgInfix(spry))
-#    var margin = IntVal(evalArg(spry))
-#    groupSetMargined(toUiGroup(node.control), margin.value.cint)
-#    return node
-#  nimMeth("title"):
-#    var node = GroupNode(evalArgInfix(spry))
-#    return newValue($(groupTitle(toUiGroup(node.control))))
-#  nimMeth("title:"):
-#    var node = GroupNode(evalArgInfix(spry))
-#    let title = StringVal(evalArg(spry)).value
-#    groupSetTitle(toUiGroup(node.control), title.cstring)
-#    return node
+  nimFunc("newGroup"):
+    let title = StringVal(evalArg(spry)).value
+    GroupNode(widget: newGroup(title))
+  nimMeth("groupMargined:"):
+    var node = GroupNode(evalArgInfix(spry))
+    var margined = BoolVal(evalArg(spry)).value
+    Group(node.widget).margined = margined
+    return node
 
   # MultilineEntry
   nimFunc("newMultilineEntryText"):
     MultilineEntryNode(widget: newMultilineEntry())
-  nimMeth("text"):
+  nimMeth("addText:"):
     var node = MultilineEntryNode(evalArgInfix(spry))
-    newValue(MultilineEntry(node.widget).text)
-  nimMeth("text:"):
-    var node = MultilineEntryNode(evalArgInfix(spry))
-    MultilineEntry(node.widget).text = StringVal(evalArg(spry)).value
+    MultilineEntry(node.widget).add(StringVal(evalArg(spry)).value)
     return node
-#  nimMeth("append:"):
-#    var node = MultilineEntryNode(evalArgInfix(spry))
-#    multilineEntryAppend(cast[ptr MultilineEntry](node.control), StringVal(evalArg(spry)).value.cstring)
-#    return node
-#  nimMeth("onChanged:"):
-#    var node = MultilineEntryNode(evalArgInfix(spry))
-#    node.onChanged = Blok(evalArg(spry))
-#    multilineEntryOnChanged(cast[ptr MultilineEntry](node.control), onChanged, cast[ptr MultilineEntryNode](node))
-#    return node
+  nimMeth("readonly"):
+    let node = WidgetNode(evalArgInfix(spry))    
+    newValue(node.readonly)
+  nimMeth("readonly:"):
+    let node = WidgetNode(evalArgInfix(spry))    
+    let readonly = BoolVal(evalArg(spry)).value
+    node.readonly(readonly)
+    
+  nimMeth("onChanged:"):
+    var node = MultilineEntryNode(evalArgInfix(spry))
+    node.onChanged = Blok(evalArg(spry))
+    MultilineEntry(node.widget).onchanged = proc() = discard node.onChanged.evalDo(spry)
+    return node
 
   # Boxes
   nimFunc("newVerticalBox"):
     BoxNode(widget: newVerticalBox())
   nimFunc("newHorizontalBox"):
     BoxNode(widget: newHorizontalBox())
-#  nimMeth("append:stretch:"):
-#    var node = BoxNode(evalArgInfix(spry))
-#    var control = WidgetNode(evalArg(spry))
-#    var stretchy = IntVal(evalArg(spry))
-#    boxAppend(cast[ptr Box](node.control), cast[ptr Control](control.control), stretchy.value.cint)
-#    return node
-#  nimMeth("delete:"):
-#    var node = BoxNode(evalArgInfix(spry))
-#    var index = IntVal(evalArg(spry))
-#    boxDelete(cast[ptr Box](node.control), index.value.cint)
-#    return node
-#  nimMeth("padding"):
-#    var node = BoxNode(evalArgInfix(spry))
-#    return newValue(int(boxPadded(cast[ptr Box](node.control))))
-#  nimMeth("padding:"):
-#    var node = BoxNode(evalArgInfix(spry))
-#    let padding = IntVal(evalArg(spry)).value
-#    boxSetPadded(cast[ptr Box](node.control), padding.cint)
-#    return node
+  nimMeth("add:stretch:"):
+    let node = BoxNode(evalArgInfix(spry))
+    let widget = WidgetNode(evalArg(spry)).widget
+    let stretchy = BoolVal(evalArg(spry)).value
+    let box = Box(node.widget)
+    # So... generics of add forces us to do this?
+    if widget of Entry:
+      box.add(Entry(widget), stretchy)
+    elif widget of MultilineEntry:
+      box.add(MultilineEntry(widget), stretchy)
+    elif widget of Box:
+      box.add(Box(widget), stretchy)
+    elif widget of Group:
+      box.add(Group(widget), stretchy)
+    elif widget of Button:
+      box.add(Button(widget), stretchy)
+    return node
+  nimMeth("delete:"):
+    var node = BoxNode(evalArgInfix(spry))
+    var index = IntVal(evalArg(spry)).value
+    Box(node.widget).delete(index)
+    return node
+  nimMeth("padded"):
+    var node = BoxNode(evalArgInfix(spry))
+    return newValue(Box(node.widget).padded)
+  nimMeth("padded:"):
+    var node = BoxNode(evalArgInfix(spry))
+    let padded = BoolVal(evalArg(spry)).value
+    Box(node.widget).padded = padded
+    return node
 
   # Buttons
-  nimFunc("newButton"):
+  nimFunc("newButton:onClicked:"):
     let label = StringVal(evalArg(spry)).value
-    ButtonNode(widget: newButton(label))
- # nimMeth("onClicked:"):
- #   var node = ButtonNode(evalArgInfix(spry))
- #   node.onClicked = Blok(evalArg(spry))
- #   buttonOnClicked(cast[ptr Button](node.control), onClicked, cast[ptr ButtonNode](node))
- #   return node
+    let blok = Blok(evalArg(spry))
+    let button = newButton(label, proc() = discard blok.evalDo(spry))
+    ButtonNode(widget: button)
 
+  # Text access
+  nimMeth("text"):
+    let node = WidgetNode(evalArgInfix(spry))    
+    newValue(node.text)
+  nimMeth("text:"):
+    let node = WidgetNode(evalArgInfix(spry))    
+    let text = StringVal(evalArg(spry)).value
+    node.text(text)
+    return node
+  nimMeth("title"):
+    let node = WidgetNode(evalArgInfix(spry))    
+    newValue(node.title)
+  nimMeth("title:"):
+    let node = WidgetNode(evalArgInfix(spry))    
+    let text = StringVal(evalArg(spry)).value
+    node.title(text)
