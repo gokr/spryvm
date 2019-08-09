@@ -16,50 +16,50 @@ suite "spry rocksb":
 
   test "atput":
     check run("""
-    rock = openDatabase "testdb"
+    rock = openRocksDB "testdb"
     rock atString: "hey" putString: "there"
     result = (rock atString: "hey")
-    rock close
+    rock closeRocksDB
     result
     """) == "\"there\""
   test "at not":
     check run("""
-    rock = openDatabase "testdb"
+    rock = openRocksDB "testdb"
     result = (rock atString: "hey")
-    rock close
+    rock closeRocksDB
     result
     """) == "undef"
   test "contains":
     check run("""
-    rock = openDatabase "testdb"
+    rock = openRocksDB "testdb"
     rock atString: "hey" putString: "there"
     result = (rock containsString: "hey")
-    rock close
+    rock closeRocksDB
     result
     """) == "true"
   test "contains not":
     check run("""
-    rock = openDatabase "testdb"
+    rock = openRocksDB "testdb"
     result = (rock containsString: "rocket")
-    rock close
+    rock closeRocksDB
     result
     """) == "false"
   test "delete":
     check run("""
-    rock = openDatabase "testdb"
+    rock = openRocksDB "testdb"
     rock atString: "hey" putString: "there"
     rock deleteString: "hey"
     result = (rock atString: "hey")
-    rock close
+    rock closeRocksDB
     result
     """) == "undef"
   
   test "atput":
     check run("""
-    rock = openDatabase "testdb"
+    rock = openRocksDB "testdb"
     rock rockAt: [a true 23] put: [a b 23 ["hey"]]
     result = (rock rockAt: [a true 23])
-    rock close
+    rock closeRocksDB
     result
     """) == """[a b 23 ["hey"]]"""
   

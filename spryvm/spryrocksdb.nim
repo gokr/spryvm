@@ -24,7 +24,7 @@ method eval*(self: RocksDBNode, spry: Interpreter): Node =
 
 # Spry Sqlite module
 proc addRocksDB*(spry: Interpreter) =
-  nimFunc("openDatabase"):
+  nimFunc("openRocksDB"):
     let path = StringVal(evalArg(spry)).value
     let rock = RocksDBNode(path: path)
     let ok = rock.init()
@@ -32,7 +32,7 @@ proc addRocksDB*(spry: Interpreter) =
       return rock
     else:
       return spry.undefVal
-  nimMeth("close"):
+  nimMeth("closeRocksDB"):
     let rock = RocksDBNode(evalArgInfix(spry))
     rocksdb.close(rock.db)
     return rock
@@ -67,6 +67,6 @@ proc addRocksDB*(spry: Interpreter) =
     rockAt:put: = method [ self atString: (compress serialize :key) putString: (compress serialize :val) ]
     rockAt: = method [
       val = (self atString: (compress serialize :key))
-      val ? then: [^(parse uncompress val)] else: [^undef]
+      val ? then: [^(eval parse uncompress val)] else: [^undef]
     ]
   ]"""
