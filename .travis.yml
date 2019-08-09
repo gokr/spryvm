@@ -32,7 +32,7 @@ matrix:
 addons: # This will only be executed on Linux
   apt:
     packages:
-      - libsnappy-dev
+      - librocksdb-dev
 
 before_install:
   # If you want to install an OSX Homebrew dependency
