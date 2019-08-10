@@ -63,10 +63,19 @@ proc addRocksDB*(spry: Interpreter) =
 
   # Library code
   discard spry.evalRoot """[
-    # Serialize
-    rockAt:put: = method [ self atString: (compress serialize :key) putString: (compress serialize :val) ]
+    # Higher level methods that serialize and compress
+    rockAt:put: = method [
+      self atString: (compress serialize :key) putString: (compress serialize :val)
+    ]
     rockAt: = method [
       val = (self atString: (compress serialize :key))
-      val ? then: [^(eval parse uncompress val)] else: [^undef]
+      val undef? then: [
+        ^ undef
+      ] else: [
+        ^ eval parse uncompress val
+      ]
+    ]
+    rockDelete: = method [
+      self deleteString: (compress serialize :key)
     ]
   ]"""

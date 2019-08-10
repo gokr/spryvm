@@ -1,12 +1,13 @@
 import unittest, spryvm, spryunittest, os
 
 # The VM module to test
-import sprycore, spryio, sprycompress, spryrocksdb
+import sprycore, spryio, spryblock, sprycompress, spryrocksdb
 
 suite "spry rocksb":
   setup:
     let vm = newInterpreter()
     vm.addCore()
+    vm.addBlock()
     vm.addIO()
     vm.addCompress()
     vm.addRocksDB()
@@ -53,8 +54,16 @@ suite "spry rocksb":
     rock closeRocksDB
     result
     """) == "undef"
-  
-  test "atput":
+  test "delete contains not":
+    check run("""
+    rock = openRocksDB "testdb"
+    rock atString: "hey" putString: "there"
+    rock deleteString: "hey"
+    result = (rock containsString: "hey")
+    rock closeRocksDB
+    result
+    """) == "false"
+  test "rock atput":
     check run("""
     rock = openRocksDB "testdb"
     rock rockAt: [a true 23] put: [a b 23 ["hey"]]
@@ -62,4 +71,17 @@ suite "spry rocksb":
     rock closeRocksDB
     result
     """) == """[a b 23 ["hey"]]"""
+  test "rock delete":
+    check run("""
+    rock = openRocksDB "testdb"
+    rock rockAt: [a true 24] put: [a b 23 ["hey"]]
+    val = (rock rockAt: [a true 24])
+    (val third == 23) then: [
+      rock rockDelete: [a true 24]
+    ]
+    result = (rock rockAt: [a true 24])
+    rock closeRocksDB
+    result
+    """) == "undef"
+    
   
