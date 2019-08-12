@@ -7,9 +7,13 @@ type
     widget*: Widget
   WindowNode* = ref object of WidgetNode
     onClosing*: Blok
+  LabelNode = ref object of WidgetNode
   EntryNode = ref object of WidgetNode
+    onChanged*: Blok
   MultilineEntryNode = ref object of WidgetNode
     onChanged*: Blok
+  ComboBoxNode = ref object of WidgetNode
+    onSelected*: Blok
   BoxNode = ref object of WidgetNode
   GroupNode = ref object of WidgetNode
   ButtonNode = ref object of WidgetNode
@@ -24,8 +28,14 @@ method type*(self: WidgetNode): string {.base.} =
   "WidgetNode"
 method `$`*(self: WindowNode): string =
   "WindowNode"
+method `$`*(self: LabelNode): string =
+  "LabelNode"
+method `$`*(self: EntryNode): string =
+  "EntryNode"
 method `$`*(self: MultilineEntryNode): string =
   "MultilineEntryNode"
+method `$`*(self: ComboBoxNode): string =
+  "ComboBoxNode"
 method `$`*(self: BoxNode): string =
   "BoxNode"
 method `$`*(self: GroupNode): string =
@@ -67,6 +77,14 @@ method text(self: WidgetNode, text: string) {.base.} =
   return
 method text(self: WidgetNode): string {.base.} =
   return
+method text(self: LabelNode, text: string) =
+  Label(self.widget).text = text
+method text(self: LabelNode): string =
+  Label(self.widget).text
+method text(self: EntryNode, text: string) =
+  Entry(self.widget).text = text
+method text(self: EntryNode): string =
+  Entry(self.widget).text
 method text(self: MultilineEntryNode, text: string) =
   MultilineEntry(self.widget).text = text
 method text(self: MultilineEntryNode): string =
@@ -250,6 +268,11 @@ proc addUI*(spry: Interpreter) =
   # MultilineEntry
   nimFunc("newMultilineEntryText"):
     MultilineEntryNode(widget: newMultilineEntry())
+  nimFunc("newEntryText:onChanged:"):
+    let text = StringVal(evalArg(spry)).value
+    let blok = Blok(evalArg(spry))
+    let entry = newEntry(text, proc() = discard blok.evalDo(spry))
+    EntryNode(widget: entry)
   nimMeth("addText:"):
     var node = MultilineEntryNode(evalArgInfix(spry))
     MultilineEntry(node.widget).add(StringVal(evalArg(spry)).value)
@@ -268,6 +291,12 @@ proc addUI*(spry: Interpreter) =
     MultilineEntry(node.widget).onchanged = proc() = discard node.onChanged.evalDo(spry)
     return node
 
+  # Label
+  nimFunc("newLabel:"):
+    let text = StringVal(evalArg(spry)).value
+    let label = newLabel(text)
+    LabelNode(widget: label)
+
   # Boxes
   nimFunc("newVerticalBox"):
     BoxNode(widget: newVerticalBox())
@@ -279,10 +308,14 @@ proc addUI*(spry: Interpreter) =
     let stretchy = BoolVal(evalArg(spry)).value
     let box = Box(node.widget)
     # So... generics of add forces us to do this?
-    if widget of Entry:
+    if widget of Label:
+      box.add(Label(widget), stretchy)
+    elif widget of Entry:
       box.add(Entry(widget), stretchy)
     elif widget of MultilineEntry:
       box.add(MultilineEntry(widget), stretchy)
+    elif widget of ComboBox:
+      box.add(ComboBox(widget), stretchy)
     elif widget of Box:
       box.add(Box(widget), stretchy)
     elif widget of Group:
