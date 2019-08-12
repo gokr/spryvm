@@ -262,6 +262,15 @@ proc addCore*(spry: Interpreter) =
     result = evalArgInfix(spry)
     let comp = SeqComposite(result)
     comp.removeLast()
+  nimMeth("removeFirst"):
+    result = evalArgInfix(spry)
+    let comp = SeqComposite(result)
+    comp.removeFirst()
+  nimMeth("removeAt:"):
+    result = evalArgInfix(spry)
+    let index = IntVal(evalArg(spry)).value
+    let comp = SeqComposite(result)
+    comp.removeAt(index)
   nimMeth("copyFrom:to:"):
     let comp = evalArgInfix(spry)
     let frm = IntVal(evalArg(spry)).value

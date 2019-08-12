@@ -503,6 +503,12 @@ method concat*(self: Curly, nodes: seq[Node]): SeqComposite =
 proc removeLast*(self: SeqComposite) =
   system.delete(self.nodes,self.nodes.high)
 
+proc removeFirst*(self: SeqComposite) =
+  system.delete(self.nodes,self.nodes.low)
+
+proc removeAt*(self: SeqComposite, index: int) =
+  system.delete(self.nodes, index)
+
 method clone*(self: Node): Node {.base.} =
   raiseRuntimeException("Should not happen..." & $self)
 
@@ -1555,6 +1561,9 @@ method eval*(self: Binding, spry: Interpreter): Node =
 
 method evalDo(self: Node, spry: Interpreter): Node =
   raiseRuntimeException("Do only works for sequences")
+
+method evalDo(self: Funk, spry: Interpreter): Node =
+  newActivation(self).eval(spry)
 
 method evalDo(self: Blok, spry: Interpreter): Node =
   newActivation(self).eval(spry)

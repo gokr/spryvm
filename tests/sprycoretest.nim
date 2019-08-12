@@ -191,6 +191,8 @@ suite "spry core":
     check run("x = [3 4] x at: 1 put: 5 eval x") == "[3 5]"
     check run("x = [3 4] x add: 5 eval x") == "[3 4 5]"
     check run("x = [3 4] x removeLast eval x") == "[3]"
+    check run("x = [3 4] x removeFirst x") == "[4]"
+    check run("x = [3 4 5] x removeAt: 1 x") == "[3 5]"
     check run("[3 4], [5 6]") == "[3 4 5 6]"
     check run("[3 4] contains: 3") == "true"
     check run("[3 4] contains: 8") == "false"
