@@ -24,6 +24,8 @@ suite "spry core":
 
   test "maps":
     check run("{}") == "{}"
+    check run("{} empty?") == "true"
+    check run("{x = 1} empty?") == "false"
     check run("{a = 1 b = 2}") == "{a = 1 b = 2}"
     check run("{a = 1 b = \"hey\"}") == "{a = 1 b = \"hey\"}"
     check run("{a = {d = (3 + 4) e = (5 + 6)}}") == "{a = {d = 7 e = 11}}"
@@ -105,6 +107,10 @@ suite "spry core":
     check run("parse \"[3 + 4]\"") == "[3 + 4]"
     check run("do parse \"[3 + 4]\"") == "7"
 
+  test "strings":
+    check run("\"ab\" empty?") == "false"  
+    check run("\"\" empty?") == "true"  
+
   test "booleans":
     # Boolean
     check run("true") == "true"
@@ -185,6 +191,8 @@ suite "spry core":
     # Block indexing and positioning
     check run("[3 4] size") == "2"
     check run("[] size") == "0"
+    check run("[3 4] empty?") == "false"
+    check run("[] empty?") == "true"
     check run("[3 4] at: 0") == "3"
     check run("[3 4] at: 1") == "4"
     check run("[3 4] at: 0 put: 5") == "[5 4]"
@@ -269,6 +277,17 @@ suite "spry core":
     check run("z = 5 foo = func [:$a ^ func [a + 10]] fupp = foo z z = 3 fupp") == "13"
     # func closures. Creates two different funcs closing over two values of a
     check run("c = func [:a func [a + :b]] d = (c 2) e = (c 3) (d 1 + e 1)") == "7" # 3 + 4
+    # Funcs and blocks should both be able to run using do
+  
+  test "do func":
+    check run("echo do func [3 + 4]") == "7"
+    check run("foo = func [3 + 4] echo do $foo") == "7"
+  test "do block":
+    check run("foo = [3 + 4] echo do $foo") == "7"
+  test "do paren":
+    check run("foo = $(3 + 4) echo do $foo") == "7"
+  test "do curly":
+    check run("foo = ${3 + 4} echo do $foo") == "7"
 
   test "ast manipulation":
     # Testing $ word that prevents evaluation, like quote in Lisp

@@ -219,6 +219,14 @@ proc addCore*(spry: Interpreter) =
       return newValue(SeqComposite(evalArgInfix(spry)).nodes.len)
     elif comp of Map:
       return newValue(Map(evalArgInfix(spry)).bindings.len)
+  nimMeth("empty?"):
+    let comp = evalArgInfix(spry)
+    if comp of StringVal:
+      result = newValue(StringVal(comp).value.len == 0)
+    elif comp of SeqComposite:
+      return newValue(SeqComposite(evalArgInfix(spry)).nodes.len == 0)
+    elif comp of Map:
+      return newValue(Map(evalArgInfix(spry)).bindings.len == 0)
   nimMeth("at:"):
     let comp = evalArgInfix(spry)
     if comp of SeqComposite:
