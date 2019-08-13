@@ -74,3 +74,14 @@ suite "spry block":
     [1 2 3 4] map: [:x * 2]
     """) == "[2 4 6 8]"
 
+  test "max:":
+    check run("[1 2 3] max: [:each] default: 0") == "3"
+    check run("[1 2 3] max: (func [:each * 6]) default: 0") == "18"
+    check run("[] max: [:each] default: 7") == "7"
+    check run("[1 20 3] max: [:each] default: 0") == "20"
+    check run("[7] max: [:each] default: 0") == "7"
+
+  test "findIndex:":
+    check run("[{x = 100} {x = 50} {x = 120}] findIndex: func [:each each::x == 120]") == "2"
+    check run("[{x = 100} {x = 50} {x = 120}] findIndex: [:each each::x == 120]") == "2"
+    
