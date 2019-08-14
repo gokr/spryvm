@@ -269,6 +269,13 @@ method hash*(self: StringVal): Hash =
 method hash*(self: PointerVal): Hash =
   self.value.hash
 
+method hash*(self: Map): Hash =
+  const salt = hash("{=}")
+  var h = salt
+  for b in self.bindings.values:
+    h = h !& b.key.hash !& b.val.hash
+  result = !$h
+
 method `==`*(self: IntVal, other: Node): bool =
   other of IntVal and (self.value == IntVal(other).value)
 
@@ -611,19 +618,17 @@ proc currentKeyword(self: Parser): KeyWord =
   else:
     return nil
 
-proc closeKeyword(self: Parser)
-proc pop(self: Parser): Node =
-  if self.currentKeyword().notNil:
-    self.closeKeyword()
-  self.stack.pop()
-
-proc addNode(self: Parser)
 proc closeKeyword(self: Parser) =
   let keyword = self.currentKeyword()
   discard self.stack.pop()
   let nodes = keyword.produceNodes()
   SeqComposite(self.top).removeLast()
   SeqComposite(self.top).add(nodes)
+
+proc pop(self: Parser): Node =
+  if self.currentKeyword().notNil:
+    self.closeKeyword()
+  self.stack.pop()
 
 proc doAddNode(self: Parser, node: Node) =
   # If we are collecting a keyword, we get nil until its ready
@@ -1156,6 +1161,11 @@ method `eq`*(a: Blok, b: Node): Node {.inline.} =
   newValue(b of Blok and (a == b))
 method `eq`*(a: Word, b: Node): Node {.inline.} =
   newValue(b of Word and (a.word == Word(b).word))
+
+method `eq`*(a, b: UndefVal): Node {.inline.} = TrueVal()
+method `eq`*(a: Node, b: UndefVal): Node {.inline.} = FalseVal()
+method `eq`*(a, b: NilVal): Node {.inline.} = TrueVal()
+method `eq`*(a: Node, b: NilVal): Node {.inline.} = FalseVal()
 
 
 method `&`*(a: Node, b: Node): Node {.inline,base.} =
