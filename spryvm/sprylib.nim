@@ -7,7 +7,7 @@ proc addLib*(spry: Interpreter) =
     error = func [echo :msg quit 1]
 
     # Trivial assert
-    assert = func [:x else: [error "Oops, assertion failed"] ^x]
+    assert = func [:x :msg x then: [echo (msg, " OK")] else: [error (msg, " FAILED")] ^x]
 
     # Objects are tagged as 'object plus additional tags
     object = func [:ts
