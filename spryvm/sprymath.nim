@@ -18,9 +18,9 @@ proc addMath*(spry: Interpreter) =
   nimMeth("random"):
     let max = evalArgInfix(spry)
     if max of FloatVal:
-      return newValue(random(FloatVal(max).value))
+      return newValue(rand(FloatVal(max).value))
     else:
-      return newValue(random(IntVal(max).value))
+      return newValue(rand(IntVal(max).value))
   nimMeth("sqrt"):
     let self = evalArgInfix(spry)
     if self of FloatVal:
@@ -29,3 +29,10 @@ proc addMath*(spry: Interpreter) =
       return newValue(sqrt(float(IntVal(self).value)))
   nimMeth("sin"): newValue(sin(FloatVal(evalArgInfix(spry)).value))
   nimMeth("cos"): newValue(cos(FloatVal(evalArgInfix(spry)).value))
+  nimMeth("mod"):
+    let a = evalArgInfix(spry)
+    let b = evalArg(spry)
+    if a of FloatVal:
+      return newValue(FloatVal(a).value mod (FloatVal(b).value))
+    else:
+      return newValue(IntVal(a).value mod (IntVal(b).value))

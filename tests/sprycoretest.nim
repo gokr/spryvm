@@ -24,6 +24,8 @@ suite "spry core":
 
   test "maps":
     check run("{}") == "{}"
+    check run("{} empty?") == "true"
+    check run("{x = 1} empty?") == "false"
     check run("{a = 1 b = 2}") == "{a = 1 b = 2}"
     check run("{a = 1 b = \"hey\"}") == "{a = 1 b = \"hey\"}"
     check run("{a = {d = (3 + 4) e = (5 + 6)}}") == "{a = {d = 7 e = 11}}"
@@ -46,16 +48,16 @@ suite "spry core":
   test "nil and undef":
     # Nil vs undef, set? set:
     check run("eval x") == "undef"
-    check run("x ?") == "false"
+    check run("x set?") == "false"
     check run("x nil?") == "false"
-    check run("x = 1 x ?") == "true"
+    check run("x = 1 x set?") == "true"
     check run("x = 1 x nil?") == "false"
-    check run("x = nil x ?") == "true"
+    check run("x = nil x set?") == "true"
     check run("x = nil x nil?") == "true"
-    check run("x = undef x ?") == "false"
+    check run("x = undef x set?") == "true"
+    check run("x = undef x undef?") == "true"
     check run("x = undef x nil?") == "false"
-    check run("x = 1 x = undef x ?") == "false"
-    check run("'x set: 1 'x set: undef x set?") == "false"
+    check run("'x set: 1 x set?") == "true"
     check run("x = 1 x set? then: [12]") == "12"
     check run("x = 5 x = undef eval x") == "undef"
     check run("x = 5 x = nil eval x") == "nil"
@@ -104,6 +106,10 @@ suite "spry core":
     # Use parse word
     check run("parse \"[3 + 4]\"") == "[3 + 4]"
     check run("do parse \"[3 + 4]\"") == "7"
+
+  test "strings":
+    check run("\"ab\" empty?") == "false"  
+    check run("\"\" empty?") == "true"  
 
   test "booleans":
     # Boolean
@@ -185,12 +191,16 @@ suite "spry core":
     # Block indexing and positioning
     check run("[3 4] size") == "2"
     check run("[] size") == "0"
+    check run("[3 4] empty?") == "false"
+    check run("[] empty?") == "true"
     check run("[3 4] at: 0") == "3"
     check run("[3 4] at: 1") == "4"
     check run("[3 4] at: 0 put: 5") == "[5 4]"
     check run("x = [3 4] x at: 1 put: 5 eval x") == "[3 5]"
     check run("x = [3 4] x add: 5 eval x") == "[3 4 5]"
     check run("x = [3 4] x removeLast eval x") == "[3]"
+    check run("x = [3 4] x removeFirst x") == "[4]"
+    check run("x = [3 4 5] x removeAt: 1 x") == "[3 5]"
     check run("[3 4], [5 6]") == "[3 4 5 6]"
     check run("[3 4] contains: 3") == "true"
     check run("[3 4] contains: 8") == "false"
@@ -267,6 +277,17 @@ suite "spry core":
     check run("z = 5 foo = func [:$a ^ func [a + 10]] fupp = foo z z = 3 fupp") == "13"
     # func closures. Creates two different funcs closing over two values of a
     check run("c = func [:a func [a + :b]] d = (c 2) e = (c 3) (d 1 + e 1)") == "7" # 3 + 4
+    # Funcs and blocks should both be able to run using do
+  
+  test "do func":
+    check run("echo do func [3 + 4]") == "7"
+    check run("foo = func [3 + 4] echo do $foo") == "7"
+  test "do block":
+    check run("foo = [3 + 4] echo do $foo") == "7"
+  test "do paren":
+    check run("foo = $(3 + 4) echo do $foo") == "7"
+  test "do curly":
+    check run("foo = ${3 + 4} echo do $foo") == "7"
 
   test "ast manipulation":
     # Testing $ word that prevents evaluation, like quote in Lisp
@@ -416,6 +437,7 @@ suite "spry core":
     check run("x = 0 1 to: 3 do: [..x = (x + :y)] x ") == "6"
     check run("y = [] -2 to: 2 do: [y add: :n] y") == "[-2 -1 0 1 2]"
     check run("x = [] 1 to: 3 do: [x add: :y] x ") == "[1 2 3]"
+    check run("x = [] 3 to: 1 by: -1 do: [x add: :y] x ") == "[3 2 1]"
 
   test "map":
     # Maps and Words, all variants should end up as same key

@@ -2,6 +2,47 @@ import spryvm
 
 import tables
 
+proc toByDo(frm, to, by: int, fn: Blok, self: Node, spry: Interpreter): Node =
+  let current = spry.currentActivation
+  # Ugly hack for now, we trick the activation into holding
+  # each in pos 0
+  let orig = current.body.nodes[0]
+  let oldpos = current.pos
+  current.pos = 0
+  # We create and reuse a single activation
+  let activation = newActivation(fn)
+  # Anoying, how can we do this without duplication of loop body?
+  if by < 0:
+    for i in countdown(frm, to, abs(by)):
+      current.body.nodes[0] = newValue(i)
+      # evalDo will increase pos, but we set it back below
+      result = activation.eval(spry)
+      activation.reset()
+      current.pos = 0
+      # Or else non local returns don't work :)
+      if current.returned:
+        # Reset our trick
+        current.body.nodes[0] = orig
+        current.pos = oldpos
+        return
+  else:
+    for i in countup(frm, to, by):
+      current.body.nodes[0] = newValue(i)
+      # evalDo will increase pos, but we set it back below
+      result = activation.eval(spry)
+      activation.reset()
+      current.pos = 0
+      # Or else non local returns don't work :)
+      if current.returned:
+        # Reset our trick
+        current.body.nodes[0] = orig
+        current.pos = oldpos
+        return
+  # Reset our trick
+  current.body.nodes[0] = orig
+  current.pos = oldpos
+  return self
+
 # Spry core module, stuff you almost certainly want
 # but doesn't have to be in spryvm.nim
 proc addCore*(spry: Interpreter) =
@@ -70,20 +111,29 @@ proc addCore*(spry: Interpreter) =
   nimMeth("set:"):
     result = evalArg(spry)
     spry.assign(evalArgInfix(spry), result)
-  nimMeth("?"):
+  nimMeth("set?"):
     let binding = spry.lookup(argInfix(spry))
     if binding.isNil:
       return spry.falseVal
     return spry.trueVal
   nimMeth("nil?"):
-    let binding = spry.lookup(argInfix(spry))
-    if binding.isNil:
-      return spry.falseVal
-    if binding.val == spry.nilVal:
-      return spry.trueVal
-    return spry.falseVal
-  nimMeth("set?"):
-    newValue(not (evalArgInfix(spry) of UndefVal))
+    newValue(evalArgInfix(spry) of NilVal)
+#    let binding = spry.lookup(argInfix(spry))
+#    if binding.isNil:
+#      return spry.falseVal
+#    if binding.val == spry.nilVal:
+#     return spry.trueVal
+#    return spry.falseVal
+  nimMeth("undef?"):
+    newValue(evalArgInfix(spry) of UndefVal)
+#    let binding = spry.lookup(argInfix(spry))
+#    if binding.isNil:
+#      return spry.trueVal
+#    if binding.val == spry.undefVal:
+#      return spry.trueVal
+#    return spry.falseVal
+#  nimMeth("set?"):
+#    newValue(not (evalArgInfix(spry) of UndefVal))
 
   # Arithmetic
   nimMeth("+"):  evalArgInfix(spry) + evalArg(spry)
@@ -169,6 +219,14 @@ proc addCore*(spry: Interpreter) =
       return newValue(SeqComposite(evalArgInfix(spry)).nodes.len)
     elif comp of Map:
       return newValue(Map(evalArgInfix(spry)).bindings.len)
+  nimMeth("empty?"):
+    let comp = evalArgInfix(spry)
+    if comp of StringVal:
+      result = newValue(StringVal(comp).value.len == 0)
+    elif comp of SeqComposite:
+      return newValue(SeqComposite(evalArgInfix(spry)).nodes.len == 0)
+    elif comp of Map:
+      return newValue(Map(evalArgInfix(spry)).bindings.len == 0)
   nimMeth("at:"):
     let comp = evalArgInfix(spry)
     if comp of SeqComposite:
@@ -212,6 +270,15 @@ proc addCore*(spry: Interpreter) =
     result = evalArgInfix(spry)
     let comp = SeqComposite(result)
     comp.removeLast()
+  nimMeth("removeFirst"):
+    result = evalArgInfix(spry)
+    let comp = SeqComposite(result)
+    comp.removeFirst()
+  nimMeth("removeAt:"):
+    result = evalArgInfix(spry)
+    let index = IntVal(evalArg(spry)).value
+    let comp = SeqComposite(result)
+    comp.removeAt(index)
   nimMeth("copyFrom:to:"):
     let comp = evalArgInfix(spry)
     let frm = IntVal(evalArg(spry)).value
@@ -322,36 +389,20 @@ proc addCore*(spry: Interpreter) =
       result = fn.evalDo(spry)
       # Or else non local returns don't work :)
       if spry.currentActivation.returned:
-        return
+        return      
   nimMeth("to:do:"):
     let self = IntVal(evalArgInfix(spry))
     let frm = self.value
     let to = IntVal(evalArg(spry)).value
     let fn = Blok(evalArg(spry))
-    let current = spry.currentActivation
-    # Ugly hack for now, we trick the activation into holding
-    # each in pos 0
-    let orig = current.body.nodes[0]
-    let oldpos = current.pos
-    current.pos = 0
-    # We create and reuse a single activation
-    let activation = newActivation(fn)
-    for i in frm .. to:
-      current.body.nodes[0] = newValue(i)
-      # evalDo will increase pos, but we set it back below
-      result = activation.eval(spry)
-      activation.reset()
-      current.pos = 0
-      # Or else non local returns don't work :)
-      if current.returned:
-        # Reset our trick
-        current.body.nodes[0] = orig
-        current.pos = oldpos
-        return
-    # Reset our trick
-    current.body.nodes[0] = orig
-    current.pos = oldpos
-    return self
+    return toByDo(frm, to, 1, fn, self, spry)
+  nimMeth("to:by:do:"):
+    let self = IntVal(evalArgInfix(spry))
+    let frm = self.value
+    let to = IntVal(evalArg(spry)).value
+    let by = IntVal(evalArg(spry)).value
+    let fn = Blok(evalArg(spry))
+    return toByDo(frm, to, by, fn, self, spry)
 
   nimMeth("whileTrue:"):
     let blk1 = SeqComposite(evalArgInfix(spry))

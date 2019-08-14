@@ -367,8 +367,8 @@ proc removeBinding*(self: Map, key: Node): Binding =
     self.bindings.del(key)
 
 proc makeBinding*(self: Map, key: Node, val: Node): Binding =
-  if val of UndefVal:
-    return self.removeBinding(key)
+  #if val of UndefVal:
+  #  return self.removeBinding(key)
   if self.bindings.hasKey(key):
     result = self.bindings[key]
     result.val = val
@@ -510,6 +510,12 @@ method concat*(self: Curly, nodes: seq[Node]): SeqComposite =
 proc removeLast*(self: SeqComposite) =
   system.delete(self.nodes,self.nodes.high)
 
+proc removeFirst*(self: SeqComposite) =
+  system.delete(self.nodes,self.nodes.low)
+
+proc removeAt*(self: SeqComposite, index: int) =
+  system.delete(self.nodes, index)
+
 method clone*(self: Node): Node {.base.} =
   raiseRuntimeException("Should not happen..." & $self)
 
@@ -612,19 +618,17 @@ proc currentKeyword(self: Parser): KeyWord =
   else:
     return nil
 
-proc closeKeyword(self: Parser)
-proc pop(self: Parser): Node =
-  if self.currentKeyword().notNil:
-    self.closeKeyword()
-  self.stack.pop()
-
-proc addNode(self: Parser)
 proc closeKeyword(self: Parser) =
   let keyword = self.currentKeyword()
   discard self.stack.pop()
   let nodes = keyword.produceNodes()
   SeqComposite(self.top).removeLast()
   SeqComposite(self.top).add(nodes)
+
+proc pop(self: Parser): Node =
+  if self.currentKeyword().notNil:
+    self.closeKeyword()
+  self.stack.pop()
 
 proc doAddNode(self: Parser, node: Node) =
   # If we are collecting a keyword, we get nil until its ready
@@ -1567,6 +1571,9 @@ method eval*(self: Binding, spry: Interpreter): Node =
 
 method evalDo(self: Node, spry: Interpreter): Node =
   raiseRuntimeException("Do only works for sequences")
+
+method evalDo(self: Funk, spry: Interpreter): Node =
+  newActivation(self).eval(spry)
 
 method evalDo(self: Blok, spry: Interpreter): Node =
   newActivation(self).eval(spry)

@@ -1,24 +1,16 @@
 # Package
-version       = "0.7.1"
+version       = "0.8.0"
 author        = "Göran Krampe"
 description   = "Homoiconic dynamic language interpreter in Nim"
 license       = "MIT"
 skipDirs      = @["examples", "examples/browser", "tests"]
 
 # Deps
-requires "nim >= 0.17.0"
+requires "nim >= 0.20.2"
 requires "python"
 requires "ui"
-requires "nimsnappy"
-
-when defined(nimdistros):
-  import distros
-  if detectOs(Ubuntu):
-    foreignDep "libsnappy-dev"
-  elif detectOs(MacOSX):
-    foreignDep "snappy"
-  elif detectOs(Windows):
-    foreignDep "snappy"
+requires "snappy"
+requires "rocksdb"
 
 task test, "Run the tests":
   withDir "tests":

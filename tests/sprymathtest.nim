@@ -20,4 +20,11 @@ suite "spry math":
     check run("61 nextPowerOfTwo") == "64"
     check run("25 sqrt") == "5.0"
     check run("25.0 sqrt") == "5.0"
-
+    check run("7 mod 5") == "2"
+    check run("-7 mod 5") == "-2"
+    check run("7 mod -5") == "2"
+    check run("-7 mod -5") == "-2"
+    check run("6.5 mod 2.5") == "1.5"
+    check run("-6.5 mod 2.5") == "-1.5"
+    check run("6.5 mod -2.5") == "1.5"
+    check run("-6.5 mod -2.5") == "-1.5"

@@ -180,4 +180,28 @@ proc addBlock*(spry: Interpreter) =
       self do: [
         do pred :n then: [result add: n]]
       ^result]
+    
+    # Return the max value of the extractor block, or default
+    max:default: = method [:extractor :default
+      self empty? then: [
+        ^default
+      ] else: [
+        max = do $extractor (self first)
+        self do: [
+          n = do $extractor :each
+          n > max then: [..max = n]
+        ]
+        ^max
+      ]
+    ]
+    
+    # Find index of first element matching predicate block, or nil.
+    findIndex: = method [:predicate
+      self reset
+      [self end?] whileFalse: [
+        n = (self next)
+        do $predicate n then: [^(self pos - 1)]
+      ]
+      ^nil
+    ]
 ]"""
