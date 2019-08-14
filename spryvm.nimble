@@ -3,7 +3,7 @@ version       = "0.8.0"
 author        = "Göran Krampe"
 description   = "Homoiconic dynamic language interpreter in Nim"
 license       = "MIT"
-skipDirs      = @["examples", "examples/browser", "tests"]
+skipDirs      = @["tests"]
 
 # Deps
 requires "nim >= 0.20.2"
