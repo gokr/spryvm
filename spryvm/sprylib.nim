@@ -9,15 +9,12 @@ proc addLib*(spry: Interpreter) =
     # Trivial assert
     assert = func [:x else: [error "Oops, assertion failed"] ^x]
 
-    # Objects
-    object = func [:ts :map
-      map tags: ts
-      map tag: 'object
-      ^ map]
+    # Objects are tagged as 'object plus additional tags
+    object = func [:ts
+      :map tags: clone ts; tag: 'object
+      ^ map
+    ]
 
-    # Modules
-    module = func [
-      object [] :map
-      map tag: 'module
-      ^ map]
+    # Modules are objects tagged as 'module
+    module = func [^ object ['module] :map]
   ]"""

@@ -21,7 +21,12 @@ proc addModules*(spry: Interpreter) =
       loadString: (readFile :fileName) as: :name]
 
     loadMap:as: = func [:map :name
-      root at: name put: map
+      # Make a module of the map (tagging it)
+      m = module map
+      # Insert module at given name
+      root at: name put: m
+      # Add module last in modules (for shadowed global lookup)
+      modules add: m
       true
     ]
 
