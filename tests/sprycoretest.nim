@@ -399,7 +399,7 @@ suite "spry core":
 
   test "lib":
     # Library code
-    check run("assert (3 < 4)") == "true"
+    check run("assert (3 < 4) \"3 less than 4\"") == "true"
 
   test "clone":
     check run("a = 12 b = clone a a = 9 eva b") == "12"
