@@ -168,7 +168,7 @@ proc addBlock*(spry: Interpreter) =
     ]
 
     spryselect: = method [:pred
-      result = ([] clone)
+      result = clone []
       self reset
       [self end?] whileFalse: [
         n = (self next)
@@ -176,7 +176,7 @@ proc addBlock*(spry: Interpreter) =
       ^result]
 
     spryselectdo: = method [:pred
-      result = ([] clone)
+      result = clone []
       self do: [
         do pred :n then: [result add: n]]
       ^result]

@@ -1516,6 +1516,7 @@ method eval*(self: PrimFunc, spry: Interpreter): Node =
 proc eval*(current: Activation, spry: Interpreter): Node =
   ## This is the inner chamber of the heart :)
   spry.pushActivation(current)
+  # debug(current)
   while current.pos < current.len:
     var next = current.next()
     if current.pos == current.len:

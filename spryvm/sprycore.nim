@@ -347,8 +347,8 @@ proc addCore*(spry: Interpreter) =
     newWord(StringVal(evalArg(spry)).value)
 
   # Cloning
-  nimMeth("clone"):
-    evalArgInfix(spry).clone()
+  nimFunc("clone"):
+    evalArg(spry).clone()
 
   # Control structures
   nimFunc("^"):

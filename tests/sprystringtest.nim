@@ -14,4 +14,4 @@ suite "spry string":
     check run("\"abc.de\" findString: \"bc\"") == "1"
     check run("\"abc.de\" findString: \"zz\"") == "-1"
     check run("\"aabcaaaaaabc\" findString: \"bc\" startingAt: 5") == "10"
-    check run("a = \"a bob bob world\" b = (a clone) a replace: \"bob\" with: \"zap\" (b, a)") == "\"a bob bob worlda zap zap world\""
+    check run("a = \"a bob bob world\" b = clone a a replace: \"bob\" with: \"zap\" (b, a)") == "\"a bob bob worlda zap zap world\""

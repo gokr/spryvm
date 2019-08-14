@@ -402,16 +402,16 @@ suite "spry core":
     check run("assert (3 < 4)") == "true"
 
   test "clone":
-    check run("a = 12 b = (a clone) a = 9 eva b") == "12"
-    check run("a = \"abc\" b = (a clone) a = \"zzz\" eva b") == "\"abc\""
-    check run("a = [[1 2]] b = (a clone) (b at: 0) at: 0 put: 5 eval a") == "[[5 2]]"
-    check run("a = [[1 2]] b = (a clone) b add: 5 eval a") == "[[1 2]]"
-    check run("x = $(3 4) $x clone") == "(3 4)" # Works for Paren
-    check run("x = ${3 4} $x clone") == "{3 4}" # Works for Curly
-    check run("a = {x = 1} a clone") == "{x = 1}"
-    check run("a = {x = [1]} b = (a clone) (b at: (reify 'y) put: 2) (b get: y) + ((b get: x) at: 0) ") == "3"
-    check run("a = {x = [1]} b = (a clone) (b set: y to: 2) (b get: y) + ((b get: x) at: 0)") == "3"
-    check run("a = {x = [1]} b = (a clone) (b set: y to: 2) (a get: y)") == "undef"
+    check run("a = 12 b = clone a a = 9 eva b") == "12"
+    check run("a = \"abc\" b = clone a a = \"zzz\" eva b") == "\"abc\""
+    check run("a = [[1 2]] b = clone a (b at: 0) at: 0 put: 5 eval a") == "[[5 2]]"
+    check run("a = [[1 2]] b = clone a b add: 5 eval a") == "[[1 2]]"
+    check run("x = $(3 4) clone $x") == "(3 4)" # Works for Paren
+    check run("x = ${3 4} clone $x") == "{3 4}" # Works for Curly
+    check run("a = {x = 1} clone a") == "{x = 1}"
+    check run("a = {x = [1]} b = clone a (b at: (reify 'y) put: 2) (b get: y) + ((b get: x) at: 0) ") == "3"
+    check run("a = {x = [1]} b = clone a (b set: y to: 2) (b get: y) + ((b get: x) at: 0)") == "3"
+    check run("a = {x = [1]} b = clone a (b set: y to: 2) (a get: y)") == "undef"
 
   test "modules":
     # Modules
