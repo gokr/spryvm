@@ -1,5 +1,8 @@
 import spryvm
-import math, random
+import math
+
+when not defined(spryMathNoRandom):
+  import random
 
 # Spry math module
 proc addMath*(spry: Interpreter) =
@@ -15,12 +18,13 @@ proc addMath*(spry: Interpreter) =
   nimMeth("powerOfTwo?"): newValue(isPowerOfTwo(IntVal(evalArgInfix(spry)).value))
   nimMeth("nextPowerOfTwo"): newValue(nextPowerOfTwo(IntVal(evalArgInfix(spry)).value))
   # nimMeth("sum", false): newValue(sum(SeqComposite(evalArg(spry)).value))
-  nimMeth("random"):
-    let max = evalArgInfix(spry)
-    if max of FloatVal:
-      return newValue(rand(FloatVal(max).value))
-    else:
-      return newValue(rand(IntVal(max).value))
+  when not defined(spryMathNoRandom):
+    nimMeth("random"):
+      let max = evalArgInfix(spry)
+      if max of FloatVal:
+        return newValue(rand(FloatVal(max).value))
+      else:
+        return newValue(rand(IntVal(max).value))
   nimMeth("sqrt"):
     let self = evalArgInfix(spry)
     if self of FloatVal:
