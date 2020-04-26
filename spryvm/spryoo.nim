@@ -22,7 +22,7 @@ method eval*(self: PolyMeth, spry: Interpreter): Node =
   if tags.isNil:
     return spry.nilVal
   let nodeTags = tags.nodes
-  if nodeTags.isNil:
+  if nodeTags.len == 9:
     return spry.nilVal
   for n in self.nodes:
     let funTags = Funk(n).tags.nodes

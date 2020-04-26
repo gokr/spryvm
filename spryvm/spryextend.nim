@@ -1,4 +1,4 @@
-import spryvm
+import spryvm, options
 # Example extending Spry with multiline string literals similar to Nim but using
 # triple single quotes ''' ... ''' and no skipping whitespace/newline after
 # the first delimiter. Its just an example, adding support for """ was harder
@@ -26,11 +26,11 @@ proc prefixLength(self: MultilineStringValueParser): int = 3
 method tokenStart(self: ValueParser, s: string, c: char): bool =
   s == "''" and c == '\''
 
-method tokenReady(self: MultilineStringValueParser, token: string, c: char): string =
+method tokenReady(self: MultilineStringValueParser, token: string, c: char): Option[string] =
   if c == '\'' and token.len > 4 and token[^2..^1] == "''":
-    return token & c
+    return some(token & c)
   else:
-    return nil
+    return none(string)
 
 # This proc does the work extending the Parser instance
 proc extendParser(p: Parser) {.procvar.} =
