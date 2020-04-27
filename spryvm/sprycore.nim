@@ -275,10 +275,14 @@ proc addCore*(spry: Interpreter) =
     let comp = SeqComposite(result)
     comp.removeFirst()
   nimMeth("removeAt:"):
-    result = evalArgInfix(spry)
-    let index = IntVal(evalArg(spry)).value
-    let comp = SeqComposite(result)
-    comp.removeAt(index)
+    let comp = evalArgInfix(spry)
+    let key = evalArg(spry)
+    if comp of SeqComposite:
+      let index = IntVal(key).value
+      SeqComposite(comp).removeAt(index)
+    elif comp of Map:
+      discard Map(comp).removeBinding(key)
+    return comp
   nimMeth("copyFrom:to:"):
     let comp = evalArgInfix(spry)
     let frm = IntVal(evalArg(spry)).value
