@@ -10,7 +10,7 @@ requires "nim >= 1.2.0"
 requires "python"
 requires "ui"
 requires "snappy"
-requires "rocksdb"
+requires "rocksdb <= 0.2.0"
 
 task test, "Run the tests":
   withDir "tests":
