@@ -899,7 +899,6 @@ type
   # An executable Spry function
   Funk* = ref object of Blok
     parent*: Activation
-    source*: StringVal # compressed
   # An executable Spry method
   Meth* = ref object of Funk
 

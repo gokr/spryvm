@@ -76,12 +76,4 @@ method typeName*(self: Binding): string =
 proc addReflect*(spry: Interpreter) =
   nimMeth("type"):
     spry.newLitWord(evalArgInfix(spry).typeName)
-  nimMeth("source"):
-    let node = Funk(evalArgInfix(spry))
-    result = node.source
-    if result.isNil: return spry.nilVal
-  nimMeth("source:"):
-    var node = Funk(evalArgInfix(spry))
-    node.source = StringVal(evalArg(spry))
-    return node
 
