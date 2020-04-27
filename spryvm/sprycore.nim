@@ -118,22 +118,8 @@ proc addCore*(spry: Interpreter) =
     return spry.trueVal
   nimMeth("nil?"):
     newValue(evalArgInfix(spry) of NilVal)
-#    let binding = spry.lookup(argInfix(spry))
-#    if binding.isNil:
-#      return spry.falseVal
-#    if binding.val == spry.nilVal:
-#     return spry.trueVal
-#    return spry.falseVal
   nimMeth("undef?"):
     newValue(evalArgInfix(spry) of UndefVal)
-#    let binding = spry.lookup(argInfix(spry))
-#    if binding.isNil:
-#      return spry.trueVal
-#    if binding.val == spry.undefVal:
-#      return spry.trueVal
-#    return spry.falseVal
-#  nimMeth("set?"):
-#    newValue(not (evalArgInfix(spry) of UndefVal))
 
   # Arithmetic
   nimMeth("+"):  evalArgInfix(spry) + evalArg(spry)
