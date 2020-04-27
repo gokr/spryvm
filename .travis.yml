@@ -1,6 +1,4 @@
 language: c
-
-cache: ccache
 cache:
   directories:
   - .cache
@@ -53,7 +51,7 @@ script:
     # Install spry
     - nimble install
     # Run tests
-    - cd tests && ./run.sh
+    - nimble test
 
 branches:
   except:
