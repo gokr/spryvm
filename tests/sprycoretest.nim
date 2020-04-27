@@ -26,9 +26,9 @@ suite "spry core":
     check run("{}") == "{}"
     check run("{} empty?") == "true"
     check run("{x = 1} empty?") == "false"
-    check run("{a = 1 b = 2}") == "{a = 1 b = 2}"
-    check run("{a = 1 b = \"hey\"}") == "{a = 1 b = \"hey\"}"
-    check run("{a = {d = (3 + 4) e = (5 + 6)}}") == "{a = {d = 7 e = 11}}"
+    check run("{a = 1 b = 2}") in ["{a = 1 b = 2}", "{b = 2 a = 1}"]
+    check run("{a = 1 b = \"hey\"}") in ["{a = 1 b = \"hey\"}", "{b = \"hey\" a = 1}"]
+    check run("{a = {d = (3 + 4) e = (5 + 6)}}") in ["{a = {d = 7 e = 11}}", "{a = {e = 11 d = 7}}"]
     check run("{a = 3} at: 'a") == "3"
     check run("{3 = 4 6 = 1} at: 6") == "1" # int, In spry any Node can be a key!
     check run("{\"hey\" = 4 true = 1 6.0 = 8} at: \"hey\"") == "4" # string
@@ -399,7 +399,7 @@ suite "spry core":
 
   test "lib":
     # Library code
-    check run("assert (3 < 4)") == "true"
+    check run("assert (3 < 4) \"failed\"") == "true"
 
   test "clone":
     check run("a = 12 b = clone a a = 9 eva b") == "12"
