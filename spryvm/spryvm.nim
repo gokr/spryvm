@@ -367,8 +367,6 @@ proc removeBinding*(self: Map, key: Node): Binding =
     self.bindings.del(key)
 
 proc makeBinding*(self: Map, key: Node, val: Node): Binding =
-  #if val of UndefVal:
-  #  return self.removeBinding(key)
   if self.bindings.hasKey(key):
     result = self.bindings[key]
     result.val = val
