@@ -1477,10 +1477,7 @@ method eval*(self: EvalModuleWord, spry: Interpreter): Node =
 method eval*(self: EvalWord, spry: Interpreter): Node =
   ## Look up and eval
   let hit = spry.lookup(self)
-  if hit.isNil:
-    spry.undefVal
-  else:
-    hit.val.eval(spry)
+  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
 
 method eval*(self: EvalSelfWord, spry: Interpreter): Node =
   ## Look up and eval
