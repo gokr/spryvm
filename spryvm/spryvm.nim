@@ -1488,8 +1488,13 @@ method eval*(self: EvalSelfWord, spry: Interpreter): Node =
   if hit.isNil: spry.undefVal else: hit.val.eval(spry)
 
 method eval*(self: EvalOuterWord, spry: Interpreter): Node =
-  ## Look up and eval
+  ## Look up and eval, from parent outwards
   let hit = spry.lookupParent(self)
+  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
+
+method eval*(self: EvalLocalWord, spry: Interpreter): Node =
+  ## Look up and eval, only in current activation
+  let hit = spry.currentActivation.lookup(self)
   if hit.isNil: spry.undefVal else: hit.val.eval(spry)
 
 method eval*(self: LitWord, spry: Interpreter): Node =
