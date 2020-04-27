@@ -7,7 +7,7 @@
 [![Join the chat at https://gitter.im/gokr/spry](https://badges.gitter.im/gokr/spry.svg)](https://gitter.im/gokr/spry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-This is the VM for the [Spry language](http://sprylang.org), packaged as a Nim library.
+This is the VM for the [Spry language](http://sprylang.se/), packaged as a Nim library.
 
 # What is this?
 

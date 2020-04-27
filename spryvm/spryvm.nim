@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2015 Göran Krampe
 
-import strutils, sequtils, tables, hashes
+import strutils, sequtils, tables, hashes, options
 
 const
   # These characters do not need whitespace to be recognized as tokens,
@@ -563,7 +563,7 @@ method parseValue(self: StringValueParser, s: string): Node {.procvar.} =
 
 method prefixLength(self: ValueParser): int {.base.} = 0
 
-method tokenReady(self: ValueParser, token: string, ch: char): string {.base.} =
+method tokenReady(self: ValueParser, token: string, ch: char): Option[string] {.base.} =
   ## Return true if self wants to take over parsing a literal
   ## and deciding when its complete. This is used for delimited literals
   ## that can contain whitespace. Otherwise parseValue is needed.
@@ -577,12 +577,12 @@ method prefixLength(self: StringValueParser): int = 1
 method tokenStart(self: StringValueParser, token: string, ch: char): bool =
   ch == '"'
 
-method tokenReady(self: StringValueParser, token: string, ch: char): string =
+method tokenReady(self: StringValueParser, token: string, ch: char): Option[string] =
   # Minimally two '"' and the previous char was not '\'
   if ch == '"' and token[^1] != '\\':
-    return token & ch
+    return some(token & ch)
   else:
-    return nil
+    return none(string)
 
 proc newParser*(): Parser =
   ## Create a new Spry parser with the basic value parsers included
@@ -796,8 +796,8 @@ proc parse*(self: Parser, str: string): Node =
       # If we are inside a literal value let the valueParser decide when complete
       if currentValueParser.notNil:
         let found = currentValueParser.tokenReady(self.token, ch)
-        if found.notNil:
-          self.token = found
+        if found.isSome:
+          self.token = found.get()
           self.addNode()
           currentValueParser = nil
         else:
