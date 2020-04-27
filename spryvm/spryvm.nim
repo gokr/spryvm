@@ -605,6 +605,9 @@ proc inBalance(self: KeyWord): bool =
 
 proc produceNodes(self: KeyWord): seq[Node] =
   result = newSeq[Node]()
+  if (self.keys[0].contains("::")):
+    result.add(newEvalModuleWord(self.keys.join()))
+  else:
   result.add(newEvalWord(self.keys.join()))
   result.add(self.args)
 

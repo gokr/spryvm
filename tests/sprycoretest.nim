@@ -370,7 +370,10 @@ suite "spry core":
     check run("[] add: 1 ; add: $ + ; add: 2 echo ; do ;") == "3" # Access to last self ;
 
     check run("x = object [] {a = 1 foo = method [self at: 'a]} x::foo") == "1"
+    check run("x = object [] {a = 1 foo = method [true then: [self at: 'a]]} x::foo") == "1"
+    check run("x = object [] {a = 1 foo = method [true then: [@a]]} x::foo") == "1"
     check run("x = object [] {a = 1 foo = method [^ @a]} x::foo") == "1"
+    check run("x = object [] {a = 1 foo:bar: = method [^ (@a + :foo + :bar)]} x::foo: 2 bar: 3") == "6"
     check run("x = object [] {a = 1 foo = method [^ @a]} eva $x::foo") == "method [^ @a]"
     check run("x = object ['foo 'bar] {a = 1} x tags") == "['foo 'bar 'object]"
 
