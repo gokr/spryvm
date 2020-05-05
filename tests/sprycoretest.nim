@@ -322,12 +322,8 @@ suite "spry core":
     # @ and ..
     check run("d = 5 do [eval $d]") == "5"
     check run("d = 5 do [eval $@d]") == "undef"
-    check run("d = 5 do [eval $..d]") == "5"
-    check run("d = 5 do [d = 3 $..d + d]") == "8"
     check run("d = 5 do [eval d]") == "5"
     check run("d = 5 do [eval @d]") == "undef"
-    check run("d = 5 do [eval ..d]") == "5"
-    check run("d = 5 do [d = 3 ..d + d]") == "8"
 
   # func infix works too, and with 3 or more arguments too...
   test "methods":

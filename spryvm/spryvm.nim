@@ -52,16 +52,12 @@ type
   EvalModuleWord* = ref object of EvalWord
     module*: Word
   EvalSelfWord* = ref object of EvalW
-  EvalLocalWord* = ref object of EvalW
-  EvalOuterWord* = ref object of EvalW
   EvalArgWord* = ref object of EvalW
 
   GetWord* = ref object of GetW
   GetModuleWord* = ref object of GetWord
     module*: Word
   GetSelfWord* = ref object of GetW
-  GetLocalWord* = ref object of GetW
-  GetOuterWord* = ref object of GetW
   GetArgWord* = ref object of GetW
 
   # And support for keyword syntactic sugar, only used during parsing
@@ -198,12 +194,6 @@ method `$`*(self: EvalModuleWord): string =
 method `$`*(self: EvalSelfWord): string =
   "@" & self.word
 
-method `$`*(self: EvalLocalWord): string =
-  "." & self.word
-
-method `$`*(self: EvalOuterWord): string =
-  ".." & self.word
-
 method `$`*(self: GetWord): string =
   "$" & self.word
 
@@ -212,12 +202,6 @@ method `$`*(self: GetModuleWord): string =
 
 method `$`*(self: GetSelfWord): string =
   "$@" & self.word
-
-method `$`*(self: GetLocalWord): string =
-  "$." & self.word
-
-method `$`*(self: GetOuterWord): string =
-  "$.." & self.word
 
 method `$`*(self: LitWord): string =
   "'" & self.word
@@ -412,12 +396,6 @@ proc newEvalModuleWord*(s: string): EvalWord =
 proc newEvalSelfWord*(s: string): EvalSelfWord =
   EvalSelfWord(word: s)
 
-proc newEvalLocalWord*(s: string): EvalLocalWord =
-  EvalLocalWord(word: s)
-
-proc newEvalOuterWord*(s: string): EvalOuterWord =
-  EvalOuterWord(word: s)
-
 proc newGetWord*(s: string): GetWord =
   GetWord(word: s)
 
@@ -427,12 +405,6 @@ proc newGetModuleWord*(s: string): GetWord =
 
 proc newGetSelfWord*(s: string): GetSelfWord =
   GetSelfWord(word: s)
-
-proc newGetLocalWord*(s: string): GetLocalWord =
-  GetLocalWord(word: s)
-
-proc newGetOuterWord*(s: string): GetOuterWord =
-  GetOuterWord(word: s)
 
 proc newEvalArgWord*(s: string): EvalArgWord =
   EvalArgWord(word: s)
@@ -678,18 +650,6 @@ proc newWord(self: Parser, token: string): Node =
         return newGetSelfWord(token[2..^1])
       else:
         raiseParseException("Malformed self lookup word, missing at least 1 character")
-    elif token[1] == '.':
-      # Local or parent
-      if len > 2:
-        if token[2] == '.':
-          if len > 3:
-            return newGetOuterWord(token[3..^1])
-          else:
-            raiseParseException("Malformed parent lookup word, missing at least 1 character")
-        else:
-          return newGetLocalWord(token[2..^1])
-      else:
-        raiseParseException("Malformed parent lookup word, missing at least 2 characters")
     else:
       if token.contains("::"):
         return newGetModuleWord(token[1..^1])
@@ -726,18 +686,6 @@ proc newWord(self: Parser, token: string): Node =
       return newEvalSelfWord(token[1..^1])
     else:
       raiseParseException("Malformed self eval word, missing at least 1 character")
-  elif first == '.':
-    # Local or parent
-    if len > 1:
-      if token[1] == '.':
-        if len > 2:
-          return newEvalOuterWord(token[2..^1])
-        else:
-          raiseParseException("Malformed parent eval word, missing at least 1 character")
-      else:
-        return newEvalLocalWord(token[1..^1])
-    else:
-      raiseParseException("Malformed local eval word, missing at least 1 character")
   else:
     if token.contains("::"):
       return newEvalModuleWord(token)
@@ -789,7 +737,7 @@ proc parse*(self: Parser, str: string): Node =
     # since you can write things like "^x" and "add: 3;" and have it
     # tokenized as "^ x" and "add: 3 ;"
     if self.specialCharDetected and ch in SpecialChars:
-      # Ok, the previos char was a special and this one too, keep collecting...
+      # Ok, the previous char was a special and this one too, keep collecting...
       self.token.add(ch)
     else:
       if self.specialCharDetected:
@@ -1293,7 +1241,6 @@ proc lookupParent(spry: Interpreter, key: Node): Binding =
     else:
       inParent = true
 
-
 method makeBinding(self: Activation, key, val: Node): Binding {.base.} =
   raiseRuntimeException("This activation should not be called with makeBinding")
 
@@ -1314,19 +1261,6 @@ method makeBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
       return nil
     else:
       return BlokActivation(activation).getLocals().makeBinding(key, val)
-
-method makeBindingInMap(spry: Interpreter, key: EvalOuterWord, val: Node): Binding =
-  # Bind in first activation with locals outside this one, unless already bound
-  var inParent = false
-  var fallback: Activation
-  for activation in mapWalk(spry.currentActivation):
-    if inParent:
-      fallback = activation
-      if activation.contains(key):
-        return nil
-    else:
-      inParent = true
-  return BlokActivation(fallback).getLocals().makeBinding(newEvalWord(key.word), val)
 
 method makeBindingInMap(spry: Interpreter, key: EvalWord, val: Node): Binding =
   # Bind in first activation with locals, unless already bound
@@ -1350,18 +1284,6 @@ method assignBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
   for activation in mapWalk(spry.currentActivation):
     if activation.contains(key):
       return BlokActivation(activation).getLocals().assignBinding(key, val)
-
-method assignBindingInMap(spry: Interpreter, key: EvalOuterWord, val: Node): Binding =
-  # Assign in first activation with locals outside this one where we find an existing binding.
-  var inParent = false
-  var fallback: Activation
-  for activation in mapWalk(spry.currentActivation):
-    if inParent:
-      fallback = activation
-      if activation.contains(key):
-        return BlokActivation(activation).locals.assignBinding(newEvalWord(key.word), val)
-    else:
-      inParent = true
 
 method assignBindingInMap(spry: Interpreter, key: EvalWord, val: Node): Binding =
   # Assign in first activation with locals where we find an existing binding
@@ -1527,11 +1449,6 @@ method eval*(self: GetSelfWord, spry: Interpreter): Node =
   let hit = spry.lookupSelf(self)
   if hit.isNil: spry.undefVal else: hit.val
 
-method eval*(self: GetOuterWord, spry: Interpreter): Node =
-  ## Look up only
-  let hit = spry.lookupParent(self)
-  if hit.isNil: spry.undefVal else: hit.val
-
 method eval*(self: EvalModuleWord, spry: Interpreter): Node =
   ## Look up and eval
   let hit = spry.lookup(self)
@@ -1545,16 +1462,6 @@ method eval*(self: EvalWord, spry: Interpreter): Node =
 method eval*(self: EvalSelfWord, spry: Interpreter): Node =
   ## Look up and eval
   let hit = spry.lookupSelf(self)
-  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
-
-method eval*(self: EvalOuterWord, spry: Interpreter): Node =
-  ## Look up and eval, from parent outwards
-  let hit = spry.lookupParent(self)
-  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
-
-method eval*(self: EvalLocalWord, spry: Interpreter): Node =
-  ## Look up and eval, only in current activation
-  let hit = spry.currentActivation.lookup(self)
   if hit.isNil: spry.undefVal else: hit.val.eval(spry)
 
 method eval*(self: LitWord, spry: Interpreter): Node =

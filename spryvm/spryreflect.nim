@@ -33,9 +33,6 @@ method typeName*(self: EvalModuleWord): string =
 method typeName*(self: EvalSelfWord): string =
   "evalselfword"
 
-method typeName*(self: EvalOuterWord): string =
-  "evalouterword"
-
 method typeName*(self: GetWord): string =
   "getword"
 
@@ -44,9 +41,6 @@ method typeName*(self: GetModuleWord): string =
 
 method typeName*(self: GetSelfWord): string =
   "getselfword"
-
-method typeName*(self: GetOuterWord): string =
-  "getouterword"
 
 method typeName*(self: LitWord): string =
   "litword"
