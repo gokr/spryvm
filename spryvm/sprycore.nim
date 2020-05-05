@@ -121,8 +121,6 @@ proc addCore*(spry: Interpreter) =
     return spry.trueVal
   nimMeth("nil?"):
     newValue(evalArgInfix(spry) of NilVal)
-  nimMeth("undef?"):
-    newValue(evalArgInfix(spry) of UndefVal)
 
   # Arithmetic
   nimMeth("+"):  evalArgInfix(spry) + evalArg(spry)
@@ -222,7 +220,7 @@ proc addCore*(spry: Interpreter) =
       return SeqComposite(comp)[evalArg(spry)]
     elif comp of Map:
       let hit = Map(comp)[evalArg(spry)]
-      if hit.isNil: return spry.undefVal else: return hit
+      if hit.isNil: return spry.nilVal else: return hit
   nimMeth("at:put:"):
     let comp = evalArgInfix(spry)
     let key = evalArg(spry)
@@ -236,7 +234,7 @@ proc addCore*(spry: Interpreter) =
     let comp = evalArgInfix(spry)
     let word = arg(spry)
     let hit = Map(comp)[word]
-    if hit.isNil: spry.undefVal else: hit
+    if hit.isNil: spry.nilVal else: hit
   nimMeth("set:to:"):
     let comp = Map(evalArgInfix(spry))
     let word = arg(spry)

@@ -6,7 +6,7 @@ import sprymath
 suite "spry math":
   setup:
     let vm = newInterpreter()
-    #vm.addCore() # ...if you need +, - etc!
+    # vm.addCore() # ...if you need +, - etc!
     vm.addMath()
 
   test "basics":

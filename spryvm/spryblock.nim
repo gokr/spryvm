@@ -9,10 +9,6 @@ proc newBlok*(size: int): Blok =
 proc addBlock*(spry: Interpreter) =
   # Accessing
   nimMeth("first"):  SeqComposite(evalArgInfix(spry))[0]
-  nimMeth("second"): SeqComposite(evalArgInfix(spry))[1]
-  nimMeth("third"):  SeqComposite(evalArgInfix(spry))[2]
-  nimMeth("fourth"): SeqComposite(evalArgInfix(spry))[3]
-  nimMeth("fifth"):  SeqComposite(evalArgInfix(spry))[4]
   nimMeth("last"):
     let nodes = SeqComposite(evalArgInfix(spry)).nodes
     nodes[high(nodes)]
@@ -34,13 +30,13 @@ proc addBlock*(spry: Interpreter) =
   nimMeth("next"):
     let comp = Blok(evalArgInfix(spry))
     if comp.pos == comp.nodes.len:
-      return spry.undefVal
+      return spry.nilVal
     result = comp[comp.pos]
     inc(comp.pos)
   nimMeth("prev"):
     let comp = Blok(evalArgInfix(spry))
     if comp.pos == 0:
-      return spry.undefVal
+      return spry.nilVal
     dec(comp.pos)
     result = comp[comp.pos]
   nimMeth("end?"):
@@ -189,7 +185,7 @@ proc addBlock*(spry: Interpreter) =
         max = do $extractor (self first)
         self do: [
           n = do $extractor :each
-          n > max then: [..max = n]
+          n > max then: [max := n]
         ]
         ^max
       ]

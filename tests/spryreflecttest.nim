@@ -7,10 +7,10 @@ suite "spry reflect":
     vm.addReflect()
   test "type":
     check:
-      run("x type") == "'undefined"
-      run("x = 0 x type") == "'int"
-      run("x = 0.5 x type") == "'float"
-      run("x = \"a\" x type") == "'string"
-      run("x = [] x type") == "'block"
-      run("x = nil x type") == "'novalue"
-      run("x = true x type") == "'boolean"
+      run("x type") == "'novalue"
+      run("x1 = 0 x1 type") == "'int"
+      run("x2 = 0.5 x2 type") == "'float"
+      run("x3 = \"a\" x3 type") == "'string"
+      run("x4 = [] x4 type") == "'block"
+      run("x5 = nil x5 type") == "'novalue"
+      run("x6 = true x6 type") == "'boolean"

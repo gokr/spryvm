@@ -31,7 +31,7 @@ proc addRocksDB*(spry: Interpreter) =
     if ok:
       return rock
     else:
-      return spry.undefVal
+      return spry.nilVal
   nimMeth("closeRocksDB"):
     let rock = RocksDBNode(evalArgInfix(spry))
     rocksdb.close(rock.db)
@@ -49,7 +49,7 @@ proc addRocksDB*(spry: Interpreter) =
     if s.ok:
       return newValue(cast[string](s.value))
     else:
-      return spry.undefVal
+      return spry.nilVal
   nimMeth("containsString:"):
     let rock = RocksDBNode(evalArgInfix(spry))
     let key = StringVal(evalArg(spry)).value
@@ -69,8 +69,8 @@ proc addRocksDB*(spry: Interpreter) =
     ]
     rockAt: = method [
       val = (self atString: (compress serialize :key))
-      val undef? then: [
-        ^ undef
+      val nil? then: [
+        ^ nil
       ] else: [
         ^ eval parse uncompress val
       ]

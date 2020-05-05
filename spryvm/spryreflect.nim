@@ -21,9 +21,6 @@ method typeName*(self: FalseVal): string =
 method typeName*(self: NilVal): string =
   "novalue"
 
-method typeName*(self: UndefVal): string =
-  "undefined"
-
 method typeName*(self: EvalWord): string =
   "evalword"
 

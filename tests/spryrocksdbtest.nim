@@ -29,7 +29,7 @@ suite "spry rocksb":
     result = (rock atString: "hey")
     rock closeRocksDB
     result
-    """) == "undef"
+    """) == "nil"
   test "contains":
     check run("""
     rock = openRocksDB "testdb"
@@ -53,7 +53,7 @@ suite "spry rocksb":
     result = (rock atString: "hey")
     rock closeRocksDB
     result
-    """) == "undef"
+    """) == "nil"
   test "delete contains not":
     check run("""
     rock = openRocksDB "testdb"
@@ -76,12 +76,12 @@ suite "spry rocksb":
     rock = openRocksDB "testdb"
     rock rockAt: [a true 24] put: [a b 23 ["hey"]]
     val = (rock rockAt: [a true 24])
-    (val third == 23) then: [
+    ((val at: 2) == 23) then: [
       rock rockDelete: [a true 24]
     ]
     result = (rock rockAt: [a true 24])
     rock closeRocksDB
     result
-    """) == "undef"
+    """) == "nil"
     
   

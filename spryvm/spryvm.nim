@@ -79,7 +79,6 @@ type
   TrueVal* = ref object of BoolVal
   FalseVal* = ref object of BoolVal
 
-  UndefVal* = ref object of Value
   NilVal* = ref object of Value
 
   # Abstract
@@ -175,9 +174,6 @@ method `$`*(self: FalseVal): string =
 
 method `$`*(self: NilVal): string =
   "nil"
-
-method `$`*(self: UndefVal): string =
-  "undef"
 
 proc `$`*(self: seq[Node]): string =
   self.map(proc(n: Node): string = $n).join(" ")
@@ -310,12 +306,6 @@ method hash*(self: NilVal): Hash =
 
 method `==`*(self: Nilval, other: Node): bool =
   other of NilVal
-
-method hash*(self: UndefVal): Hash =
-  hash(2)
-
-method `==`*(self: Undefval, other: Node): bool =
-  other of UndefVal
 
 method hash*(self: Blok): Hash =
   hash(self.nodes)
@@ -453,9 +443,6 @@ proc newValue*(v: bool): BoolVal =
 
 proc newNilVal*(): NilVal =
   NilVal()
-
-proc newUndefVal*(): UndefVal =
-  UndefVal()
 
 # AST manipulation
 proc add*(self: SeqComposite, n: Node) =
@@ -839,7 +826,6 @@ type
     modules*: Blok           # Modules for unqualified lookup
     trueVal*: Node
     falseVal*: Node
-    undefVal*: Node
     nilVal*: Node
     emptyBlok*: Blok         # Used as optimization for nodes without tags
     objectTag*: Node         # Tag for Objects
@@ -1116,8 +1102,6 @@ method `eq`*(a: Blok, b: Node): Node {.inline.} =
 method `eq`*(a: Word, b: Node): Node {.inline.} =
   newValue(b of Word and (a.word == Word(b).word))
 
-method `eq`*(a, b: UndefVal): Node {.inline.} = TrueVal()
-method `eq`*(a: Node, b: UndefVal): Node {.inline.} = FalseVal()
 method `eq`*(a, b: NilVal): Node {.inline.} = TrueVal()
 method `eq`*(a: Node, b: NilVal): Node {.inline.} = FalseVal()
 
@@ -1255,20 +1239,14 @@ method assignBinding(self: BlokActivation, key, val: Node): Binding =
 
 
 method makeBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
-  # Bind in first activation with locals, unless already bound
+  # Bind in first activation with locals
   for activation in mapWalk(spry.currentActivation):
-    if activation.contains(key):
-      return nil
-    else:
-      return BlokActivation(activation).getLocals().makeBinding(key, val)
+    return BlokActivation(activation).getLocals().makeBinding(key, val)
 
 method makeBindingInMap(spry: Interpreter, key: EvalWord, val: Node): Binding =
-  # Bind in first activation with locals, unless already bound
+  # Bind in first activation with locals
   for activation in mapWalk(spry.currentActivation):
-    if activation.contains(key):
-      return nil
-    else:
-      return BlokActivation(activation).getLocals().makeBinding(key, val)
+    return BlokActivation(activation).getLocals().makeBinding(key, val)
 
 method makeBindingInMap(spry: Interpreter, key: EvalModuleWord, val: Node): Binding =
   # Bind in module, unless already bound
@@ -1276,8 +1254,7 @@ method makeBindingInMap(spry: Interpreter, key: EvalModuleWord, val: Node): Bind
   if binding.notNil:
     let module = binding.val
     if module.notNil:
-      if not Map(module).contains(key):
-        return Map(module).makeBinding(newEvalWord(key.word), val)
+      return Map(module).makeBinding(newEvalWord(key.word), val)
 
 method assignBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
   # Bind in first activation with locals where we find an existing binding
@@ -1328,7 +1305,7 @@ proc evalArgInfix*(spry: Interpreter): Node =
 
 proc self*(spry: Interpreter): Node =
   if spry.currentActivation.self.isNil:
-    spry.currentActivation.self = spry.undefVal
+    spry.currentActivation.self = spry.nilVal
   spry.currentActivation.self
 
 proc setSelf*(spry: Interpreter): Node =
@@ -1437,32 +1414,32 @@ method eval*(self: Word, spry: Interpreter): Node =
 method eval*(self: GetModuleWord, spry: Interpreter): Node =
   ## Look up only
   let hit = spry.lookup(self)
-  if hit.isNil: spry.undefVal else: hit.val
+  if hit.isNil: spry.nilVal else: hit.val
 
 method eval*(self: GetWord, spry: Interpreter): Node =
   ## Look up only
   let hit = spry.lookup(self)
-  if hit.isNil: spry.undefVal else: hit.val
+  if hit.isNil: spry.nilVal else: hit.val
 
 method eval*(self: GetSelfWord, spry: Interpreter): Node =
   ## Look up only
   let hit = spry.lookupSelf(self)
-  if hit.isNil: spry.undefVal else: hit.val
+  if hit.isNil: spry.nilVal else: hit.val
 
 method eval*(self: EvalModuleWord, spry: Interpreter): Node =
   ## Look up and eval
   let hit = spry.lookup(self)
-  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
+  if hit.isNil: spry.nilVal else: hit.val.eval(spry)
 
 method eval*(self: EvalWord, spry: Interpreter): Node =
   ## Look up and eval
   let hit = spry.lookup(self)
-  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
+  if hit.isNil: spry.nilVal else: hit.val.eval(spry)
 
 method eval*(self: EvalSelfWord, spry: Interpreter): Node =
   ## Look up and eval
   let hit = spry.lookupSelf(self)
-  if hit.isNil: spry.undefVal else: hit.val.eval(spry)
+  if hit.isNil: spry.nilVal else: hit.val.eval(spry)
 
 method eval*(self: LitWord, spry: Interpreter): Node =
   self
@@ -1591,7 +1568,6 @@ proc newInterpreter*(): Interpreter =
   spry.trueVal = newValue(true)
   spry.falseVal = newValue(false)
   spry.nilVal = newNilVal()
-  spry.undefVal = newUndefVal()
   spry.emptyBlok = newBlok()
   spry.objectTag = spry.newLitWord("object")
   spry.moduleTag = spry.newLitWord("module")
@@ -1599,7 +1575,6 @@ proc newInterpreter*(): Interpreter =
 
   spry.makeWord("false", spry.falseVal)
   spry.makeWord("true", spry.trueVal)
-  spry.makeWord("undef", spry.undefVal)
   spry.makeWord("nil", spry.nilVal)
   spry.makeWord("modules", spry.modules)
 
