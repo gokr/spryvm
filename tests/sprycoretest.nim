@@ -55,7 +55,7 @@ suite "spry core":
     check isolate("q2 = 5 q2 := 6 q2") == "6"
     check isolate("q3 = 5 q3 = 6 q3") == "6"
     check isolate("Foo = {x = 5} Foo::x := 3 eval Foo") == "{x = 3}"
-    check isolate("Foo = {} Foo::x := 3 eval Foo") == "{x = nil}"
+    check isolate("Foo = {} Foo::x := 3 eval Foo") == "{}"
     check isolate("Foo = {x = nil} Foo::x := 3 eval Foo") == "{x = 3}"
     check isolate("Moo = {x = 5} Moo::x = 3 eval Moo") == "{x = 3}"
 
