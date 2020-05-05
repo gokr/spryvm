@@ -107,10 +107,13 @@ proc addCore*(spry: Interpreter) =
   # Assignment and tests
   nimMeth("="):
     result = evalArg(spry) # Perhaps we could make it eager here? Pulling in more?
+    spry.bindAndAssign(argInfix(spry), result)
+  nimMeth(":="):
+    result = evalArg(spry) # Perhaps we could make it eager here? Pulling in more?
     spry.assign(argInfix(spry), result)
   nimMeth("set:"):
     result = evalArg(spry)
-    spry.assign(evalArgInfix(spry), result)
+    spry.bindAndAssign(evalArgInfix(spry), result)
   nimMeth("set?"):
     let binding = spry.lookup(argInfix(spry))
     if binding.isNil:

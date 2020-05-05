@@ -375,6 +375,11 @@ proc makeBinding*(self: Map, key: Node, val: Node): Binding =
     result = Binding(key: key, val: val)
     self.bindings[key] = result
 
+proc assignBinding*(self: Map, key: Node, val: Node): Binding =
+  if self.bindings.hasKey(key):
+    result = self.bindings[key]
+    result.val = val
+    result.key = key
 
 # Constructor procs
 proc raiseParseException(msg: string) =
@@ -491,7 +496,7 @@ proc contains*(self: SeqComposite, n: Node): bool =
   self.nodes.contains(n)
 
 proc contains*(self: Map, n: Node): bool =
-  self.bindings.contains(n)
+  self.bindings.hasKey(n)
 
 method concat*(self: SeqComposite, nodes: seq[Node]): SeqComposite {.base.} =
   raiseRuntimeException("Should not happen..." & $self & " " & $nodes)
@@ -654,8 +659,9 @@ proc newWord(self: Parser, token: string): Node =
   let len = token.len
   let first = token[0]
 
+  #echo "Token: " & $token
   # All arg words (unique for Spry) are preceded with ":"
-  if first == ':' and len > 1:
+  if first == ':' and len > 1 and token[1] != '=':
     if token[1] == '$':
       if token.len < 3:
         raiseParseException("Malformed get argword, missing at least 1 character")
@@ -1232,6 +1238,14 @@ method lookup*(self: BlokActivation, key: Node): Binding =
   if self.locals.notNil:
     return self.locals.lookup(key)
 
+method contains*(self: Activation, key: Node): bool {.base.} =
+  # Base implementation needed for dynamic dispatch to work
+  nil
+
+method contains*(self: BlokActivation, key: Node): bool =
+  if self.locals.notNil:
+    return self.locals.contains(key)
+
 proc lookup*(spry: Interpreter, key: Node): Binding =
   ## Not sure why, but three methods didn't want to fly
   if (key of EvalModuleWord):
@@ -1286,38 +1300,83 @@ method makeBinding(self: Activation, key, val: Node): Binding {.base.} =
 method makeBinding(self: BlokActivation, key, val: Node): Binding =
   self.getLocals().makeBinding(key, val)
 
+method assignBinding(self: Activation, key, val: Node): Binding {.base.} =
+  raiseRuntimeException("This activation should not be called with assignBinding")
+
+method assignBinding(self: BlokActivation, key, val: Node): Binding =
+  self.getLocals().assignBinding(key, val)
+
 
 method makeBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
-  # Bind in first activation with locals
+  # Bind in first activation with locals, unless already bound
   for activation in mapWalk(spry.currentActivation):
-    return BlokActivation(activation).getLocals().makeBinding(key, val)
+    if activation.contains(key):
+      return nil
+    else:
+      return BlokActivation(activation).getLocals().makeBinding(key, val)
 
 method makeBindingInMap(spry: Interpreter, key: EvalOuterWord, val: Node): Binding =
-  # Bind in first activation with locals outside this one
-  # or where we find an existing binding.
+  # Bind in first activation with locals outside this one, unless already bound
   var inParent = false
   var fallback: Activation
   for activation in mapWalk(spry.currentActivation):
     if inParent:
       fallback = activation
-      if activation.lookup(key).notNil:
-        return BlokActivation(activation).locals.makeBinding(newEvalWord(key.word), val)
+      if activation.contains(key):
+        return nil
     else:
       inParent = true
   return BlokActivation(fallback).getLocals().makeBinding(newEvalWord(key.word), val)
 
 method makeBindingInMap(spry: Interpreter, key: EvalWord, val: Node): Binding =
-  # Bind in first activation with locals
+  # Bind in first activation with locals, unless already bound
   for activation in mapWalk(spry.currentActivation):
-    return BlokActivation(activation).getLocals().makeBinding(key, val)
+    if activation.contains(key):
+      return nil
+    else:
+      return BlokActivation(activation).getLocals().makeBinding(key, val)
 
 method makeBindingInMap(spry: Interpreter, key: EvalModuleWord, val: Node): Binding =
-  # Bind in module
+  # Bind in module, unless already bound
   let binding = spry.lookup(key.module)
   if binding.notNil:
     let module = binding.val
     if module.notNil:
-      return Map(module).makeBinding(newEvalWord(key.word), val)
+      if not Map(module).contains(key):
+        return Map(module).makeBinding(newEvalWord(key.word), val)
+
+method assignBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
+  # Bind in first activation with locals where we find an existing binding
+  for activation in mapWalk(spry.currentActivation):
+    if activation.contains(key):
+      return BlokActivation(activation).getLocals().assignBinding(key, val)
+
+method assignBindingInMap(spry: Interpreter, key: EvalOuterWord, val: Node): Binding =
+  # Assign in first activation with locals outside this one where we find an existing binding.
+  var inParent = false
+  var fallback: Activation
+  for activation in mapWalk(spry.currentActivation):
+    if inParent:
+      fallback = activation
+      if activation.contains(key):
+        return BlokActivation(activation).locals.assignBinding(newEvalWord(key.word), val)
+    else:
+      inParent = true
+
+method assignBindingInMap(spry: Interpreter, key: EvalWord, val: Node): Binding =
+  # Assign in first activation with locals where we find an existing binding
+  for activation in mapWalk(spry.currentActivation):
+    if activation.contains(key):
+      return BlokActivation(activation).getLocals().assignBinding(key, val)
+
+method assignBindingInMap(spry: Interpreter, key: EvalModuleWord, val: Node): Binding =
+  # Bind in module if binding exists
+  let binding = spry.lookup(key.module)
+  if binding.notNil:
+    let module = binding.val
+    if module.notNil:
+      if Map(module).contains(key):
+        return Map(module).assignBinding(newEvalWord(key.word), val)
 
 
 proc makeLocalBinding(spry: Interpreter, key: Node, val: Node): Binding =
@@ -1326,6 +1385,9 @@ proc makeLocalBinding(spry: Interpreter, key: Node, val: Node): Binding =
     return activation.makeBinding(key, val)
 
 proc assign*(spry: Interpreter, word: Node, val: Node) =
+  discard spry.assignBindingInMap(word, val)
+
+proc bindAndAssign*(spry: Interpreter, word: Node, val: Node) =
   discard spry.makeBindingInMap(word, val)
 
 proc argInfix*(spry: Interpreter): Node =

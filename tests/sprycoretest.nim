@@ -43,7 +43,13 @@ suite "spry core":
     check run("x = 5 x") == "5"
     check run("x = 5 eval x") == "5" # We can also eval it
     check run("f = func [3 + 4] f") == "7" # Functions are evaluated
-    check run("Foo = {x = 5} Foo::x = 3 eval Foo") == "{x = 3}"
+
+  test "reassignment":
+    check run("q1 := 3 q1") == "undef"
+    check run("q2 = 5 q2 := 6 q2") == "6"
+    check run("q3 = 5 q3 = 6 q3") == "5"
+    check run("Foo = {x = 5} Foo::x := 3 eval Foo") == "{x = 3}"
+    check run("Moo = {x = 5} Moo::x = 3 eval Moo") == "{x = 5}"
 
   test "nil and undef":
     # Nil vs undef, set? set:
@@ -64,8 +70,8 @@ suite "spry core":
     check run("x = undef x undef?") == "true"
     check run("x = undef x nil?") == "false"
     check run("'x set: 1 'x set?") == "true"
-    check run("x = 5 x = undef eval x") == "undef"
-    check run("x = 5 x = nil eval x") == "nil"
+    check run("x = 5 x := undef eval x") == "undef"
+    check run("x = 5 x := nil eval x") == "nil"
     check run("'x set: 5 eval x") == "5"
     check run("x = 'foo x set: 5 eval foo") == "5"
     check run("(litword \"foo\") set: 5 eval foo") == "5"
@@ -103,13 +109,14 @@ suite "spry core":
     check run("x = 4 5 + x") == "9"
     check run("x = 1 x = x eval x") == "1"
     check run("x = 4 x") == "4"
-    check run("x = 1 x = (x + 2) eval x") == "3"
+    check run("x = 1 x := (x + 2) eval x") == "3"
     check run("x = 4 k = do [y = (x + 3) eval y] k + x") == "11"
-    check run("x = 1 do [..x = (x + 1)] eval x") == "2"
+    check run("x = 1 do [x := (x + 1)] eval x") == "2"
 
   test "parse":
     # Use parse word
     check run("parse \"[3 + 4]\"") == "[3 + 4]"
+    check run("parse \"[x := 4]\"") == "[x := 4]"
     check run("do parse \"[3 + 4]\"") == "7"
 
   test "strings":
@@ -247,13 +254,13 @@ suite "spry core":
 
   test "loops":
     # loops, eva will
-    check run("x = 0 5 repeat: [..x = (x + 1)] x") == "5"
-    check run("x = 0 0 repeat: [..x = (x + 1)] x") == "0"
-    check run("x = 0 5 repeat: [..x = (x + 1)] x") == "5"
-    check run("x = 0 [x > 5] whileFalse: [..x = (x + 1)] x") == "6"
-    check run("x = 10 [x > 5] whileTrue: [..x = (x - 1)] x") == "5"
-    check run("foo = func [x = 10 [x > 5] whileTrue: [x = (x - 1) ^11] ^x] foo") == "11" # Return inside
-    check run("foo = func [x = 10 [x > 5 ^99] whileTrue: [x = (x - 1)] ^x] foo") == "99" # Return inside
+    check run("x = 0 5 repeat: [x := (x + 1)] x") == "5"
+    check run("x = 0 0 repeat: [x := (x + 1)] x") == "0"
+    check run("x = 0 5 repeat: [x := (x + 1)] x") == "5"
+    check run("x = 0 [x > 5] whileFalse: [x := (x + 1)] x") == "6"
+    check run("x = 10 [x > 5] whileTrue: [x := (x - 1)] x") == "5"
+    check run("foo = func [x = 10 [x > 5] whileTrue: [x := (x - 1) ^11] ^x] foo") == "11" # Return inside
+    check run("foo = func [x = 10 [x > 5 ^99] whileTrue: [x := (x - 1)] ^x] foo") == "99" # Return inside
 
 
   test "functions":
@@ -279,7 +286,7 @@ suite "spry core":
     check run("add = func [ :a < 0 then: [^ nil] ^ (a + :b) ] add -4 3") == "3"
     check run("add = func [ :a < 0 then: [^ nil] ^ (a + :b) ] add 1 3") == "4"
     # Macros, they need to be able to return multipe nodes...
-    check run("z = 5 foo = func [:$a ^ func [a + 10]] fupp = foo z z = 3 fupp") == "13"
+    check run("z = 5 foo = func [:$a ^ func [a + 10]] fupp = foo z z := 3 fupp") == "13"
     # func closures. Creates two different funcs closing over two values of a
     check run("c = func [:a func [a + :b]] d = (c 2) e = (c 3) (d 1 + e 1)") == "7" # 3 + 4
     # Funcs and blocks should both be able to run using do
@@ -345,15 +352,15 @@ suite "spry core":
     x = n
     [x <= m] whileTrue: [
       do blk x
-      ..x = (x + 1)]]
+      x := (x + 1)]]
     r = 0
-    for 2 5 [..r = (r + :i)]
+    for 2 5 [r := (r + :i)]
     eval r
     """) == "14"
 
     check run("""
     r = 0 y = [1 2 3]
-    y do: [..r = (r + :e)]
+    y do: [r := (r + :e)]
     eval r
     """) == "6"
 
@@ -425,14 +432,14 @@ suite "spry core":
     # Modules
     check run("Foo = {x = 10} eva Foo::x") == "10" # Direct access works
     check run("Foo = {x = 10} eva Foo::y") == "undef" # and missing key works too
-    check run("Foo = {x = 10} Foo::x = 3 eva Foo::x") == "3"
+    check run("Foo = {x = 10} Foo::x := 3 eva Foo::x") == "3"
     check run("eva Foo::y") == "undef"
     check run("Foo = {x = 10} eva $Foo::x") == "10"
     check run("Foo = {x = func [:x + 1]} eva $Foo::x") == "func [:x + 1]"
     check run("Foo = {x = func [:x + 1]} Foo::x 3") == "4"
     check run("eval modules") == "[]"
     check run("modules add: {x = 10} eval modules") == "[{x = 10}]"
-    check run("x") == "10"
+    check run("modules add: {x = 10} x") == "10"
     check run("foo = func [bar = {x = 10} bar::x + 1] bar = 10 eval foo") == "11"
     check run("do [bar = {x = 1 y = 2} do [bar::x + 1]]") == "2"
   test "modules lookup":
@@ -441,8 +448,8 @@ suite "spry core":
     check run("Foo = {x = func [:x + 1] y = 10} Bar = {x = func [:x + 2]} modules add: Bar modules add: Foo x y") == "12"
 
   test "iteration":
-    check run("x = 0 [1 2 3] do: [..x = (x + :y)] x") == "6"
-    check run("x = 0 1 to: 3 do: [..x = (x + :y)] x ") == "6"
+    check run("x = 0 [1 2 3] do: [x := (x + :y)] x") == "6"
+    check run("x = 0 1 to: 3 do: [x := (x + :y)] x ") == "6"
     check run("y = [] -2 to: 2 do: [y add: :n] y") == "[-2 -1 0 1 2]"
     check run("x = [] 1 to: 3 do: [x add: :y] x ") == "[1 2 3]"
     check run("x = [] 3 to: 1 by: -1 do: [x add: :y] x ") == "[3 2 1]"
