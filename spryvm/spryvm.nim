@@ -972,8 +972,8 @@ proc reset*(self: Activation) =
   self.returned = false
   self.pos = 0
 
-template hasLocals(self: Activation): bool =
-  not (self of ParenActivation)
+template isParenActivation*(self: Activation): bool =
+  self of ParenActivation
 
 template outer(self: Activation): Activation =
   if self of FunkActivation:
@@ -991,7 +991,7 @@ template outer(self: Activation): Activation =
 iterator mapWalk*(first: Activation): Activation =
   var activation = first
   while activation.notNil:
-    while not activation.hasLocals():
+    while activation.isParenActivation:
       activation = activation.outer()
     yield activation
     activation = activation.outer()
@@ -1001,7 +1001,7 @@ iterator mapWalk*(first: Activation): Activation =
 iterator callerWalk*(first: Activation): Activation =
   var activation = first
   # First skip over immediate paren activations
-  while not activation.hasLocals():
+  while activation.isParenActivation:
     activation = activation.parent
   # Then pick parent, unless nil
   if activation.notNil:
@@ -1011,7 +1011,7 @@ iterator callerWalk*(first: Activation): Activation =
       yield activation
       activation = activation.parent
       # Skip paren activations
-      while not activation.hasLocals():
+      while activation.isParenActivation:
         activation = activation.parent
 
 # Methods supporting the Nim math primitives with coercions

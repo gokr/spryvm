@@ -57,16 +57,25 @@ proc addCore*(spry: Interpreter) =
     spry.currentActivation
 
   # Set catcher of given activation
-  nimMeth("catch:"):
+  nimMeth("catcher:"):
     let act = evalArgInfix(spry)
     let blk = evalArg(spry)
     if act of Activation:
-      if blk of Blok:
-        Activation(act).catcher = Blok(blk)
+      if blk of SeqComposite:
+        Activation(act).catcher = SeqComposite(blk)
+
+  # Set catcher of current activation
+  nimFunc("catch:"):
+    let blk = evalArg(spry)
+    if blk of SeqComposite:
+      spry.currentActivation.catcher = SeqComposite(blk)
 
   # Throw zero or more arguments up caller chain
   nimFunc("throw"):
-    let current = spry.currentActivation
+    var current = spry.currentActivation
+    # First skip over immediate paren activations
+    while current.isParenActivation:
+      current = current.parent
     if current.catcher.notNil:
       return current.catcher.evalDo(spry)
     for activation in callerWalk(current):

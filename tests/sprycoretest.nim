@@ -464,11 +464,39 @@ suite "spry core":
     check isolate("ifTrue: = method [:blk self then: [^do blk] else: [^nil]] 3 > 2 ifTrue: [99] ") == "99"
     check isolate("ifTrue: = method [:blk self then: [^do blk] nil] 1 > 2 ifTrue: [99] ") == "nil"
 
-  test "catch throw no args":
-    check isolate("activation catch: [42] throw") == "42"
-  test "catch throw no args two levels":
-    check isolate("bar = func [throw] foo = func [activation catch: [42] bar] foo") == "42"
-  test "catch throw one arg":
-    check isolate("activation catch: [:thing + 4] throw 3") == "7"
-  test "catch throw one arg two levels":
-    check isolate("bar = func [throw 9] foo = func [activation catch: [:x + 42] bar] foo") == "51"
+  test "catch throw":
+    check isolate("activation catcher: [42] throw") == "42"
+  test "catch throw in paren":
+    check isolate("activation catcher: [42] (throw)") == "42"
+  test "catch throw twice":
+    check isolate("activation catcher: [42] throw + throw") == "84"
+  test "catch throw in nested thing":
+    check isolate("activation catcher: [42] do [do [true then: [(2 + (throw))]]]") == "44"
+  test "catch throw three times inside block":
+    check isolate("activation catcher: [42] true then: [throw + throw + throw]") == "126"
+  test "catch throw change catcher in between":
+    check isolate("activation catcher: [42] a = throw activation catcher: [41] a + throw") == "83"
+  test "catch throw one call down":
+    check isolate("bar = func [throw] foo = func [activation catcher: [42] bar] foo") == "42"
+  test "catch throw with one argument":
+    check isolate("activation catcher: [:thing + 4] throw 3") == "7"
+  test "catch throw with one argument one call down":
+    check isolate("bar = func [throw 9] foo = func [activation catcher: [:x + 42] bar] foo") == "51"
+  test "catch shortcut with one argument one call down explicit return":
+    check isolate("bar = func [throw 9] foo = func [catch: [^(:x + 42)] bar] foo") == "51"
+  test "func catcher one argument one call down explicit return":
+    check isolate("bar = func [throw 9] adder = func [^(:x + 42)] foo = func [catch: $adder bar] foo") == "51"
+
+  test "try:catch:":
+    check isolate("""
+    
+    # Set top level ignore catch!
+    catch: [nil]
+    
+    foo = func [
+      x = try: [3 + throw] catch: [8]
+      y = try: [3 + throw] catch: [4]
+      ^(x + y)
+    ]
+    foo
+    """) == "18"
