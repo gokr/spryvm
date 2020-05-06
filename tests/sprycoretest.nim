@@ -463,3 +463,12 @@ suite "spry core":
     # Implementing ifTrue: using then:, two variants
     check isolate("ifTrue: = method [:blk self then: [^do blk] else: [^nil]] 3 > 2 ifTrue: [99] ") == "99"
     check isolate("ifTrue: = method [:blk self then: [^do blk] nil] 1 > 2 ifTrue: [99] ") == "nil"
+
+  test "catch throw no args":
+    check isolate("activation catch: [42] throw") == "42"
+  test "catch throw no args two levels":
+    check isolate("bar = func [throw] foo = func [activation catch: [42] bar] foo") == "42"
+  test "catch throw one arg":
+    check isolate("activation catch: [:thing + 4] throw 3") == "7"
+  test "catch throw one arg two levels":
+    check isolate("bar = func [throw 9] foo = func [activation catch: [:x + 42] bar] foo") == "51"

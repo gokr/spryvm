@@ -26,7 +26,8 @@ method dump(self: FunkActivation) =
   echo($self.body)
   if self.pos < self.len:
     echo "POS(" & $self.pos & "): " & $self.body[self.pos]
-  echo($self.locals)
+  if self.locals.notNil:
+    echo($self.locals)
 
 method dump(self: BlokActivation) =
   echo "BLOKACTIVATION"
@@ -35,7 +36,7 @@ method dump(self: BlokActivation) =
     echo "POS(" & $self.pos & "): " & $self.body[self.pos]
   echo($self.locals)
 
-proc dump(spry: Interpreter) =
+proc dump*(spry: Interpreter) =
   echo "STACK:"
   for a in spry.stack:
     dump(a)

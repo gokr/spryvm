@@ -56,6 +56,29 @@ proc addCore*(spry: Interpreter) =
   nimFunc("activation"):
     spry.currentActivation
 
+  # Set catcher of given activation
+  nimMeth("catch:"):
+    let act = evalArgInfix(spry)
+    let blk = evalArg(spry)
+    if act of Activation:
+      if blk of Blok:
+        Activation(act).catcher = Blok(blk)
+
+  # Throw zero or more arguments up caller chain
+  nimFunc("throw"):
+    let current = spry.currentActivation
+    if current.catcher.notNil:
+      return current.catcher.evalDo(spry)
+    for activation in callerWalk(current):
+      if activation.catcher.notNil:
+        return activation.catcher.evalDo(spry)
+    # Panic exit - should normally not reach here since root activation should have a catcher
+    let node = evalArg(spry)
+    if node of IntVal:
+      quit(IntVal(node).value)
+    else:
+      quit(1)
+
   # Access to closest scope
   nimFunc("locals"):
     for activation in mapWalk(spry.currentActivation):

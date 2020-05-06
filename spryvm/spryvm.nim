@@ -853,6 +853,7 @@ type
     parent*: Activation
     pos*: int          # Which node we are at
     body*: SeqComposite   # The composite representing code (Blok, Paren, Funk)
+    catcher*: SeqComposite
 
   # We want to distinguish different activations
   BlokActivation* = ref object of Activation
@@ -1002,15 +1003,16 @@ iterator callerWalk*(first: Activation): Activation =
   # First skip over immediate paren activations
   while not activation.hasLocals():
     activation = activation.parent
-  # Then pick parent
-  activation = activation.parent
-  # Then we start yielding
-  while activation.notNil:
-    yield activation
+  # Then pick parent, unless nil
+  if activation.notNil:
     activation = activation.parent
-    # Skip paren activations
-    while not activation.hasLocals():
+    # Then we start yielding
+    while activation.notNil:
+      yield activation
       activation = activation.parent
+      # Skip paren activations
+      while not activation.hasLocals():
+        activation = activation.parent
 
 # Methods supporting the Nim math primitives with coercions
 method `+`*(a: Node, b: Node): Node {.inline,base.} =
