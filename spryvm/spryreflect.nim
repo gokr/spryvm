@@ -63,6 +63,9 @@ method typeName*(self: Map): string =
 method typeName*(self: Binding): string =
   "binding"
 
+method typeName*(self: Activation): string =
+  "activation"
+
 # Spry Reflection module
 proc addReflect*(spry: Interpreter) =
   nimMeth("type"):

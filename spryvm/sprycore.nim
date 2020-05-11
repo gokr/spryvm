@@ -16,7 +16,7 @@ proc toByDo(frm, to, by: int, fn: Blok, self: Node, spry: Interpreter): Node =
     for i in countdown(frm, to, abs(by)):
       current.body.nodes[0] = newValue(i)
       # evalDo will increase pos, but we set it back below
-      result = activation.eval(spry)
+      result = activation.evalActivation(spry)
       activation.reset()
       current.pos = 0
       # Or else non local returns don't work :)
@@ -29,7 +29,7 @@ proc toByDo(frm, to, by: int, fn: Blok, self: Node, spry: Interpreter): Node =
     for i in countup(frm, to, by):
       current.body.nodes[0] = newValue(i)
       # evalDo will increase pos, but we set it back below
-      result = activation.eval(spry)
+      result = activation.evalActivation(spry)
       activation.reset()
       current.pos = 0
       # Or else non local returns don't work :)
@@ -55,6 +55,11 @@ proc addCore*(spry: Interpreter) =
   # Access to current Activation
   nimFunc("activation"):
     spry.currentActivation
+
+  # Access to nearest BlokActivation
+  nimFunc("blockActivation"):
+    for activation in mapWalk(spry.currentActivation):
+      return BlokActivation(activation)
 
   # Set catcher of given activation
   nimMeth("catcher:"):
@@ -88,10 +93,39 @@ proc addCore*(spry: Interpreter) =
     else:
       quit(1)
 
-  # Access to closest scope
-  nimFunc("locals"):
-    for activation in mapWalk(spry.currentActivation):
-      return BlokActivation(activation).getLocals()
+  # Get locals of activation
+  nimMeth("locals"):
+    let node = evalArgInfix(spry)
+    if node of BlokActivation:
+      return BlokActivation(node).getLocals()
+    else:
+      return spry.nilVal
+
+  # Get outer Activation, follows lexical parent if
+  nimMeth("outer"):
+    let node = evalArgInfix(spry)
+    if node of Activation:
+      for activation in outerWalk(Activation(node)):
+        return activation# return Activation(node).outer()
+    else:
+      return spry.nilVal
+
+  # Get caller Activation, skips paren activations
+  nimMeth("caller"):
+    let node = evalArgInfix(spry)
+    if node of Activation:
+      for activation in callerWalk(Activation(node)):
+        return activation
+    else:
+      return spry.nilVal
+
+  # Get parent Activation
+  nimMeth("parent"):
+    let node = evalArgInfix(spry)
+    if node of Activation:
+      return Activation(node).parent
+    else:
+      return spry.nilVal
 
   # Access to self
   nimFunc("node"):
@@ -332,7 +366,7 @@ proc addCore*(spry: Interpreter) =
     for each in blk1.nodes:
       current.body.nodes[0] = each
       # evalDo will increase pos, but we set it back below
-      result = activation.eval(spry)
+      result = activation.evalActivation(spry)
       activation.reset()
       # Or else non local returns don't work :)
       if current.returned:

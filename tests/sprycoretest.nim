@@ -364,11 +364,11 @@ suite "spry core":
 
   test "reflection":
     # The word locals gives access to the local Map
-    check isolate("do [d = 5 locals]") == "{d = 5}"
-    check isolate("do [d = 5 locals at: 'd]") == "5"
-    check isolate("locals at: 'd put: 5 d + 2") == "7"
-    check isolate("map = do [a = 1 b = 2 locals] (map at: 'a) + (map at: 'b) ") == "3"
-    check isolate("map = do [a = 1 b = 2 c = 3 (locals)] (map get: a) + (map get: b) + (map get: c)") == "6"
+    check isolate("do [d = 5 activation locals]") == "{d = 5}"
+    check isolate("do [d = 5 activation locals at: 'd]") == "5"
+    check isolate("activation locals at: 'd put: 5 d + 2") == "7"
+    check isolate("map = do [a = 1 b = 2 activation locals] (map at: 'a) + (map at: 'b) ") == "3"
+    check isolate("map = do [a = 1 b = 2 c = 3 (blockActivation locals)] (map get: a) + (map get: b) + (map get: c)") == "6"
 
   test "self":
     # The word self gives access to the receiver for methods only
@@ -394,6 +394,13 @@ suite "spry core":
   test "activation":
     # The word activation gives access to the current activation record
     check isolate("activation") == "activation [[activation] 1]"
+    check isolate("(activation)") == "activation [(activation) 1]"
+    check isolate("x = 1 (activation locals)") == "nil"
+    check isolate("do [x = 1 (activation locals)]") == "nil"
+    check isolate("do [x = 1 (activation parent locals)]") == "{x = 1}"
+    check isolate("do [x = 1 (blockActivation locals)]") == "{x = 1}"
+    check isolate("x = 5 bar = func [m = (activation caller locals) m::x] foo = func [x = 10 bar] foo") == "10"
+    check isolate("x = 5 bar = func [m = (activation outer locals) m::x] foo = func [x = 10 bar] foo") == "5"
 
   test "tags":
     # Add and check tag
@@ -496,6 +503,7 @@ suite "spry core":
     foo = func [
       x = try: [3 + throw] catch: [8]
       y = try: [3 + throw] catch: [4]
+      throw 99 # Ignored
       ^(x + y)
     ]
     foo

@@ -76,7 +76,7 @@ proc addBlock*(spry: Interpreter) =
     for each in self.nodes:
       current.body.nodes[0] = each
       # evalDo will increase pos, but we set it back below
-      result = activation.eval(spry)
+      result = activation.evalActivation(spry)
       activation.reset()
       # Or else non local returns don't work :)
       if current.returned:
@@ -106,7 +106,7 @@ proc addBlock*(spry: Interpreter) =
     for each in self.nodes:
       current.body.nodes[0] = each
       # evalDo will increase pos, but we set it back below
-      result = activation.eval(spry)
+      result = activation.evalActivation(spry)
       activation.reset()
       # Or else non local returns don't work :)
       if current.returned:

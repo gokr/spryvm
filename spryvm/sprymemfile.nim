@@ -36,7 +36,7 @@ proc addMemfile*(spry: Interpreter) =
     let activation = newActivation(blk)
     for line in lines(memfile):
       current.body.nodes[0] = StringVal(value: string(line))
-      discard activation.eval(spry)
+      discard activation.evalActivation(spry)
       activation.reset()
       current.pos = 0
       # Or else non local returns don't work :)

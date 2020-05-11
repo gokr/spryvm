@@ -975,7 +975,7 @@ proc reset*(self: Activation) =
 template isParenActivation*(self: Activation): bool =
   self of ParenActivation
 
-template outer(self: Activation): Activation =
+template outer*(self: Activation): Activation =
   if self of FunkActivation:
     # Instead of looking at my parent, which would be the caller
     # we go to the activation where I was created, thus a Funk is a lexical
@@ -986,7 +986,7 @@ template outer(self: Activation): Activation =
     # not lexical closures.
     self.parent
 
-# Walk maps for lookups and binds. Skips parens since they do not have
+# Walk maps for lookups and binds, starts at given Activation. Skips parens since they do not have
 # locals and uses outer() that will let Funks go to their "lexical parent"
 iterator mapWalk*(first: Activation): Activation =
   var activation = first
@@ -995,6 +995,25 @@ iterator mapWalk*(first: Activation): Activation =
       activation = activation.outer()
     yield activation
     activation = activation.outer()
+
+# Walk maps for lookups and binds, starts at given Activation. Skips parens since they do not have
+# locals and uses outer() that will let Funks go to their "lexical parent"
+iterator outerWalk*(first: Activation): Activation =
+  var activation = first
+  # First skip over immediate paren activations
+  while activation.isParenActivation:
+    activation = activation.outer()
+  # Then pick parent, unless nil
+  if activation.notNil:
+    activation = activation.outer()
+    # Then we start yielding
+    while activation.notNil:
+      yield activation
+      activation = activation.outer()
+      # Skip paren activations
+      while activation.isParenActivation:
+        activation = activation.outer()
+
 
 # Walk activations for pulling arguments, here we strictly use
 # parent to walk only up through the caller chain. Skipping paren activations.
@@ -1446,6 +1465,9 @@ method eval*(self: EvalSelfWord, spry: Interpreter): Node =
 method eval*(self: LitWord, spry: Interpreter): Node =
   self
 
+method eval*(self: Activation, spry: Interpreter): Node =
+  self
+
 method eval*(self: EvalArgWord, spry: Interpreter): Node =
   let previousActivation = spry.argParent()
   let arg = previousActivation.next()
@@ -1463,7 +1485,7 @@ method eval*(self: GetArgWord, spry: Interpreter): Node =
 method eval*(self: PrimFunc, spry: Interpreter): Node =
   self.primitive(spry)
 
-proc eval*(current: Activation, spry: Interpreter): Node =
+proc evalActivation*(current: Activation, spry: Interpreter): Node =
   ## This is the inner chamber of the heart :)
   spry.pushActivation(current)
   # debug(current)
@@ -1491,19 +1513,19 @@ proc eval*(current: Activation, spry: Interpreter): Node =
   return current.last
 
 method eval*(self: Funk, spry: Interpreter): Node =
-  newActivation(self).eval(spry)
+  newActivation(self).evalActivation(spry)
 
 method eval*(self: Meth, spry: Interpreter): Node =
   let act = newActivation(self)
   discard setSelf(spry)
-  act.eval(spry)
+  act.evalActivation(spry)
 
 method eval*(self: Paren, spry: Interpreter): Node =
-  newActivation(self).eval(spry)
+  newActivation(self).evalActivation(spry)
 
 method eval*(self: Curly, spry: Interpreter): Node =
   let activation = newActivation(self)
-  discard activation.eval(spry)
+  discard activation.evalActivation(spry)
   activation.returned = true
   return activation.locals
 
@@ -1524,17 +1546,17 @@ method evalDo(self: Node, spry: Interpreter): Node =
   raiseRuntimeException("Do only works for sequences")
 
 method evalDo(self: Funk, spry: Interpreter): Node =
-  newActivation(self).eval(spry)
+  newActivation(self).evalActivation(spry)
 
 method evalDo(self: Blok, spry: Interpreter): Node =
-  newActivation(self).eval(spry)
+  newActivation(self).evalActivation(spry)
 
 method evalDo(self: Paren, spry: Interpreter): Node =
-  newActivation(self).eval(spry)
+  newActivation(self).evalActivation(spry)
 
 method evalDo(self: Curly, spry: Interpreter): Node =
   # Calling do on a curly doesn't do the locals trick
-  newActivation(self).eval(spry)
+  newActivation(self).evalActivation(spry)
 
 
 proc eval*(spry: Interpreter, code: string): Node =
@@ -1548,7 +1570,7 @@ proc evalRootDo*(self: Blok, spry: Interpreter): Node =
   spry.rootActivation.body = self
   spry.rootActivation.pos = 0
   # This will push it back and... pop it too afterwards
-  result = spry.rootActivation.eval(spry)
+  result = spry.rootActivation.evalActivation(spry)
   # ...so we need to put it back again
   spry.pushActivation(spry.rootActivation)
 
