@@ -353,7 +353,7 @@ proc addCore*(spry: Interpreter) =
 
   # Collection primitives
   nimMeth("do:"):
-    let blk1 = SeqComposite(evalArgInfix(spry))
+    let c = evalArgInfix(spry)
     let blk2 = Blok(evalArg(spry))
     let current = spry.currentActivation
     # Ugly hack for now, we trick the activation into holding
@@ -363,22 +363,36 @@ proc addCore*(spry: Interpreter) =
     current.pos = 0
     # We create and reuse a single activation
     let activation = newActivation(blk2)
-    for each in blk1.nodes:
-      current.body.nodes[0] = each
-      # evalDo will increase pos, but we set it back below
-      result = activation.evalActivation(spry)
-      activation.reset()
-      # Or else non local returns don't work :)
-      if current.returned:
-        # Reset our trick
-        current.body.nodes[0] = orig
-        current.pos = oldpos
-        return
-      current.pos = 0
+    if c of SeqComposite:
+      for each in SeqComposite(c).nodes:
+        current.body.nodes[0] = each
+        # evalDo will increase pos, but we set it back below
+        result = activation.evalActivation(spry)
+        activation.reset()
+        # Or else non local returns don't work :)
+        if current.returned:
+          # Reset our trick
+          current.body.nodes[0] = orig
+          current.pos = oldpos
+          return
+        current.pos = 0
+    elif c of Map:
+      for each in Map(c).bindings.values:
+        current.body.nodes[0] = each.val
+        # evalDo will increase pos, but we set it back below
+        result = activation.evalActivation(spry)
+        activation.reset()
+        # Or else non local returns don't work :)
+        if current.returned:
+          # Reset our trick
+          current.body.nodes[0] = orig
+          current.pos = oldpos
+          return
+        current.pos = 0
     # Reset our trick
     current.body.nodes[0] = orig
     current.pos = oldpos
-    return blk1
+    return c
 
   # Quit
   nimFunc("quit"):    quit(IntVal(evalArg(spry)).value)
