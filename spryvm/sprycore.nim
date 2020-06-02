@@ -351,6 +351,17 @@ proc addCore*(spry: Interpreter) =
     if comp.tags.notNil:
       result.tags = comp.tags
 
+  # Binding
+  nimMeth("key"):
+    Binding(evalArgInfix(spry)).key
+    #let k = Binding(evalArgInfix(spry)).key
+    #if (k of Word):
+    #  spry.litify(k)
+    #else:
+    #  k
+  nimMeth("value"):
+    Binding(evalArgInfix(spry)).val
+
   # Collection primitives
   nimMeth("do:"):
     let c = evalArgInfix(spry)
@@ -378,7 +389,7 @@ proc addCore*(spry: Interpreter) =
         current.pos = 0
     elif c of Map:
       for each in Map(c).bindings.values:
-        current.body.nodes[0] = each.val
+        current.body.nodes[0] = each
         # evalDo will increase pos, but we set it back below
         result = activation.evalActivation(spry)
         activation.reset()
@@ -391,6 +402,35 @@ proc addCore*(spry: Interpreter) =
         current.pos = 0
     # Reset our trick
     current.body.nodes[0] = orig
+    current.pos = oldpos
+    return c
+
+  nimMeth("keyValueDo:"):
+    let c = evalArgInfix(spry)
+    let blk2 = Blok(evalArg(spry))
+    let current = spry.currentActivation
+    # Ugly hack for now
+    let oldbody = current.body
+    let oldpos = current.pos
+    current.pos = 0
+    # We create and reuse a single activation
+    let activation = newActivation(blk2)
+    current.body = newBlok(2)
+    for each in Map(c).bindings.values:
+      current.body.nodes[0] = each.key
+      current.body.nodes[1] = each.val
+      # evalDo will increase pos, but we set it back below
+      result = activation.evalActivation(spry)
+      activation.reset()
+      # Or else non local returns don't work :)
+      if current.returned:
+        # Reset our trick
+        current.body = oldbody
+        current.pos = oldpos
+        return
+      current.pos = 0
+    # Reset our trick
+    current.body = oldbody
     current.pos = oldpos
     return c
 

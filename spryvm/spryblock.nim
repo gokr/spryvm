@@ -2,9 +2,6 @@ import spryvm
 
 import algorithm
 
-proc newBlok*(size: int): Blok =
-  Blok(nodes: newSeq[Node](size))
-
 # Spry block module
 proc addBlock*(spry: Interpreter) =
   # Accessing

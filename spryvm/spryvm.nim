@@ -94,7 +94,7 @@ type
   Map* = ref object of Composite
     bindings*: Table[Node, Binding]
 
-  # Dictionaries currently holds Bindings instead of the value directly.
+  # Maps currently hold Bindings instead of the value directly.
   # This way we we can later reify Binding
   # so we can hold it and set/get its value without lookup
   Binding* = ref object of Node
@@ -410,6 +410,9 @@ proc newBlok*(nodes: seq[Node]): Blok =
 
 proc newBlok*(): Blok =
   Blok(nodes: newSeq[Node]())
+
+proc newBlok*(size: int): Blok =
+  Blok(nodes: newSeq[Node](size))
 
 proc newParen*(nodes: seq[Node]): Paren =
   Paren(nodes: nodes)
@@ -1539,7 +1542,7 @@ method eval*(self: Map, spry: Interpreter): Node =
   self
 
 method eval*(self: Binding, spry: Interpreter): Node =
-  self.val.eval(spry)
+  self #self.val.eval(spry)
 
 
 method evalDo(self: Node, spry: Interpreter): Node =

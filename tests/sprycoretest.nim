@@ -44,6 +44,7 @@ suite "spry core":
     #check isolate("{true = false} at: true") == "false") # nil humm..
     check isolate("dict = {a = 3} dict at: 'a put: 5 dict at: 'a") == "5"
 
+
   test "assignment":
     check isolate("x = 5") == "5"
     check isolate("x = 5 x") == "5"
@@ -454,6 +455,13 @@ suite "spry core":
 
   test "iteration":
     check isolate("x = 0 [1 2 3] do: [x := (x + :y)] x") == "6"
+    check isolate("a = 5 b = 8 x = 0 [a b] do: [x := (x + :y)] x") == "13" # Regular eval argword evaluates "a" in outer scope!! Ouch
+    check isolate("a = 5 b = 8 x = 0 [a b] do: [a = 3 x := (x + eval :$y)] x") == "11" # Using argword we evaluate the word inside instead and shadowing occurs!
+    check isolate("x = 0 {a = 1 b = 2 c = 3} do: [x := (x + (:binding value))] x") == "6"
+    check isolate("x = \"\" {a = 1} do: [x := litify eva (:binding key)] x") == "'a" # The key is an eval word, so eva will only evaluate the paren, then we litify the word without evaluating it
+    check isolate("x = 0 {a = 1 b = 2 c = 3} keyValueDo: [:k :v x := (x + v)] x") == "6"
+    check isolate("x = 0 {a = 1} keyValueDo: [x := litify :$k] x") == "'a" # You can skip pulling value
+    check isolate("a = 5 x = 0 {a = 1} keyValueDo: [x := :k] x") == "5" # Regular eval argword evaluates "a" in outer scope!! Ouch
     check isolate("x = 0 1 to: 3 do: [x := (x + :y)] x ") == "6"
     check isolate("y = [] -2 to: 2 do: [y add: :n] y") == "[-2 -1 0 1 2]"
     check isolate("x = [] 1 to: 3 do: [x add: :y] x ") == "[1 2 3]"
