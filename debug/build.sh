@@ -1,0 +1,1 @@
+nim c --debugger:native try
