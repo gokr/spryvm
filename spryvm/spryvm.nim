@@ -859,13 +859,12 @@ type
     catcher*: SeqComposite
 
   # We want to distinguish different activations
+  ParenActivation* = ref object of Activation
   BlokActivation* = ref object of Activation
     locals*: Map  # This is where we put named args and locals
   FunkActivation* = ref object of BlokActivation
-  ParenActivation* = ref object of Activation
   CurlyActivation* = ref object of BlokActivation
   RootActivation* = ref object of BlokActivation
-
 
 # Forward declarations to make Nim happy
 proc funk*(spry: Interpreter, body: Blok): Node
