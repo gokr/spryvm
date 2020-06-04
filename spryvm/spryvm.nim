@@ -16,7 +16,7 @@ const
   SpecialChars: set[char] = {';','\\','^','&','%','|',',','~'} #
 
 type
-  ParseException* = object of Exception
+  ParseException* = object of CatchableError
 
   # The iterative parser builds a Node tree using a stack for nested blocks
   Parser* = ref object
@@ -101,7 +101,7 @@ type
     key*: Node
     val*: Node
 
-  RuntimeException* = object of Exception
+  RuntimeException* = object of CatchableError
 
 proc raiseRuntimeException*(msg: string) =
   raise newException(RuntimeException, msg)
