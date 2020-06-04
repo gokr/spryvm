@@ -1,5 +1,6 @@
 bench/benchmarks
 bench/log.txt
+debug/try
 nimcache
 profile_*
 .ispry-history
