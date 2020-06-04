@@ -51,6 +51,12 @@ method typeName*(self: GetArgWord): string =
 method typeName*(self: Blok): string =
   "block"
 
+method typeName*(self: Funk): string =
+  "func"
+
+method typeName*(self: Meth): string =
+  "method"
+
 method typeName*(self: Paren): string =
   "paren"
 
