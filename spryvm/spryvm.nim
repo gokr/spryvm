@@ -1487,28 +1487,22 @@ method eval*(self: GetArgWord, spry: Interpreter): Node =
 method eval*(self: PrimFunc, spry: Interpreter): Node =
   self.primitive(spry)
 
-proc evalActivation*(current: Activation, spry: Interpreter): Node =
+proc evalActivation*(current: Activation, spry: Interpreter): Node {.inline.} =
   ## This is the inner chamber of the heart :)
   spry.pushActivation(current)
   # debug(current)
   while current.pos < current.len:
     var next = current.next()
-    if current.pos == current.len:
-      # This was last node, no need to peek
-      current.last = next.eval(spry)
-      if current.returned:
-        spry.currentActivation.doReturn(spry)
-        return current.last
-    else:
+    if current.pos != current.len:
       # We need to peek one ahead and if that is a method, we eval it instead
       let peek = current.peek()
       if peek.isMethod(spry):
         current.last = next
         next = current.next()
-      current.last = next.eval(spry)
-      if current.returned:
-        spry.currentActivation.doReturn(spry)
-        return current.last
+    current.last = next.eval(spry)
+    if current.returned:
+      spry.currentActivation.doReturn(spry)
+      return current.last
   if current.last of Binding:
     current.last = Binding(current.last).val
   spry.popActivation()
