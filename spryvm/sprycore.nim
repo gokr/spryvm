@@ -69,12 +69,6 @@ proc addCore*(spry: Interpreter) =
       if blk of SeqComposite:
         Activation(act).catcher = SeqComposite(blk)
 
-  # Set catcher of current activation
-  nimFunc("catch:"):
-    let blk = evalArg(spry)
-    if blk of SeqComposite:
-      spry.currentActivation.catcher = SeqComposite(blk)
-
   # Throw zero or more arguments up caller chain
   nimFunc("throw"):
     var current = spry.currentActivation

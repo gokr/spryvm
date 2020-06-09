@@ -18,6 +18,6 @@ proc addLib*(spry: Interpreter) =
     # Modules are objects tagged as 'module
     module = func [^ object ['module] :map]
 
-    # try:catch:
-    try:catch: = func [:blk catch: :handler do blk]
+    # catch:
+    catch: = method [activation catcher: :handler do self]
   ]"""

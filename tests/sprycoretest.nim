@@ -498,19 +498,19 @@ suite "spry core":
   test "catch throw with one argument one call down":
     check isolate("bar = func [throw 9] foo = func [activation catcher: [:x + 42] bar] foo") == "51"
   test "catch shortcut with one argument one call down explicit return":
-    check isolate("bar = func [throw 9] foo = func [catch: [^(:x + 42)] bar] foo") == "51"
+    check isolate("bar = func [throw 9] foo = func [activation catcher: [^(:x + 42)] bar] foo") == "51"
   test "func catcher one argument one call down explicit return":
-    check isolate("bar = func [throw 9] adder = func [^(:x + 42)] foo = func [catch: $adder bar] foo") == "51"
+    check isolate("bar = func [throw 9] adder = func [^(:x + 42)] foo = func [activation catcher: $adder bar] foo") == "51"
 
-  test "try:catch:":
+  test "catch:":
     check isolate("""
     
     # Set top level ignore catch!
-    catch: [nil]
+    activation catcher: [nil]
     
     foo = func [
-      x = try: [3 + throw] catch: [8]
-      y = try: [3 + throw] catch: [4]
+      x = ([3 + throw] catch: [8])
+      y = ([3 + throw] catch: [4])
       throw 99 # Ignored
       ^(x + y)
     ]
