@@ -21,7 +21,7 @@ method parseValue(self: MultilineStringValueParser, s: string): Node {.procvar.}
     if s[0..2] == "'''" and s[^3..^1] == "'''":
       result = newValue(s[3..^4])
 
-proc prefixLength(self: MultilineStringValueParser): int = 3
+method prefixLength(self: MultilineStringValueParser): int = 3
 
 method tokenStart(self: ValueParser, s: string, c: char): bool =
   s == "''" and c == '\''
