@@ -1,5 +1,5 @@
 import spryvm
-import db_sqlite
+import db_connector/db_sqlite
 import sequtils
 
 type
@@ -35,7 +35,7 @@ proc addSqlite*(spry: Interpreter) =
     let conn = node.conn
     let query = StringVal(evalArg(spry)).value
     let nodes = SeqComposite(evalArg(spry)).nodes
-    let stringValues: seq[string] = nodes.map(proc(x:Node): string = StringVal(x).value)
+    let stringValues: seq[string] = nodes.map(proc(x: Node): string = StringVal(x).value)
     conn.exec(sql(query), stringValues)
     return node
   nimMeth("getRows:params:"):
@@ -43,14 +43,14 @@ proc addSqlite*(spry: Interpreter) =
     let conn = node.conn
     let query = StringVal(evalArg(spry)).value
     let nodes = SeqComposite(evalArg(spry)).nodes
-    let stringValues = nodes.map(proc(x:Node): string = StringVal(x).value)
+    let stringValues = nodes.map(proc(x: Node): string = StringVal(x).value)
     let blok = newBlok()
     for row in conn.rows(sql(query), stringValues):
-      var cols = row.map(proc(x:string): Node = StringVal(value: x))
+      var cols = row.map(proc(x: string): Node = StringVal(value: x))
       let rowBlok = newBlok(cols)
       blok.add(rowBlok)
     return blok
-  
+
   # Library code
   discard spry.evalRoot """[
     # Without params
