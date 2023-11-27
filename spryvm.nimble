@@ -6,13 +6,14 @@ license       = "MIT"
 skipDirs      = @["tests"]
 
 # Deps
-requires "nim >= 1.2.0"
+requires "nim >= 2.0.0"
 requires "python"
 requires "ui"
 requires "snappy"
 requires "smtp"
 requires "db_connector"
-requires "https://github.com/status-im/nim-rocksdb.git#5b1307cb1f4c85bb72ff781d810fb8c0148b1183"
+requires "rocksdb"
+#requires "https://github.com/status-im/nim-rocksdb.git#5b1307cb1f4c85bb72ff781d810fb8c0148b1183"
 
 task test, "Run the tests":
   withDir "tests":
