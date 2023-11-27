@@ -11,11 +11,11 @@ proc addIO*(spry: Interpreter) =
   nimFunc("probe"):
     result = evalArg(spry)
     echo($result)
-  
+
   # Files
   nimFunc("existsFile"):
     let fn = StringVal(evalArg(spry)).value
-    newValue(existsFile(fn))
+    newValue(fileExists(fn))
   nimFunc("readFile"):
     let fn = StringVal(evalArg(spry)).value
     let contents = readFile(fn).string

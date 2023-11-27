@@ -1,4 +1,4 @@
-import unittest, spryvm, spryunittest
+import unittest, spryvm
 
 # The VM module to test
 import sprycore, spryextend, sprylib, spryoo
@@ -23,7 +23,8 @@ suite "spry oo":
   test "tags":
     check isolate("o = {x = 5} o tag: 'object o tags") == "['object]"
     check isolate("o = object [] {x = 5} o tags") == "['object]"
-    check isolate("o = \"foo\" getx = method [^ @x] o getx") == "nil" # Because @ works only for objects
+    check isolate("o = \"foo\" getx = method [^ @x] o getx") ==
+        "nil" # Because @ works only for objects
     check isolate("o = {x = 5} getx = method [^ @x] o tag: 'object o getx") == "5"
     check isolate("o = {x = 5} getx = method [eva @x] o tag: 'object o getx") == "5"
     check isolate("o = {x = 5} xplus = method [@x + 1] o tag: 'object o xplus") == "6"

@@ -1,4 +1,4 @@
-import unittest, spryvm, spryunittest, spryio
+import unittest, spryvm, spryio
 
 # The VM module to test
 import sprycore, spryblock
@@ -91,4 +91,3 @@ suite "spry block":
   test "findIndex:":
     check isolate("[{x = 100} {x = 50} {x = 120}] findIndex: func [:each each::x == 120]") == "2"
     check isolate("[{x = 100} {x = 50} {x = 120}] findIndex: [:each each::x == 120]") == "2"
-    

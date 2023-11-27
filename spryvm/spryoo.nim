@@ -1,4 +1,4 @@
-import spryvm, sequtils
+import spryvm
 
 # An executable Spry polymorphic function
 type
