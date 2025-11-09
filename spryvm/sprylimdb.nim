@@ -10,7 +10,7 @@ type
 proc init(self: LimdbNode) =
   let dataDir = self.path / "data"
   createDir(dataDir)
-  self.db = initDatabase[string, string](dataDir)
+  self.db = initDatabase(dataDir)
 
 method `$`*(self: LimdbNode): string =
   "LimdbNode"
