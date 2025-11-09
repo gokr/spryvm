@@ -15,11 +15,13 @@ suite "spry JSON":
         """) == "{\"age\":35,\"pi\":3.1415}"
 
   test "tospry":
+    # Hash table order is non-deterministic, check both possible orderings
     check run("""
       (parseJSON "{\"age\": 35, \"pi\": 3.1415}") toSpry
-      """) == "{\"age\" = 35 \"pi\" = 3.1415}"
+      """) in ["{\"age\" = 35 \"pi\" = 3.1415}", "{\"pi\" = 3.1415 \"age\" = 35}"]
 
   test "toJSON":
+    # Hash table order is non-deterministic, check both possible orderings
     check run("""
       (parseJSON "{\"age\": 35, \"pi\": 3.1415}") toSpry toJSON
-     """) == "{\"age\":35,\"pi\":3.1415}"
+     """) in ["{\"age\":35,\"pi\":3.1415}", "{\"pi\":3.1415,\"age\":35}"]

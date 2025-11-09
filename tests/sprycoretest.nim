@@ -88,7 +88,7 @@ suite "spry core":
     check isolate("3 + 4 * 2") == "14" # Yeah
     check isolate("3 + (4 * 2)") == "11" # Thank god
     check isolate("3 / 2") == "1.5" # Goes to float
-    check isolate("3 / 2 * 1.2") == "1.8" #
+    check isolate("3 / 2 * 1.2") == "1.7999999999999998" # Floating point precision
     check isolate("3 + 3 * 1.5") == "9.0" # Goes to float
 
     # And we can nest also, since a block has its own Activation
