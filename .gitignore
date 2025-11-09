@@ -8,3 +8,4 @@ bin/spry
 bin/ispry
 .vagrant
 *.log
+.roo
