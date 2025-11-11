@@ -13,12 +13,10 @@ This is **not where you start out with Spry**, instead take a look at [the langu
 # Installation
 
 SpryVM mainly depends on Nim, so it should work fine on Windows, OSX, Linux etc, but
-for the moment **I use Linux for Spry development**. The shell scripts will probably be rewritten in nimscript and thus everything can be fully cross platform - feel free to help me with that!
+for the moment **I use Linux for Spry development**. The shell scripts should probably be rewritten in nimscript and thus everything can be fully cross platform - feel free to help me with that!
 
-1. Install librocksdb-dev which should be one of the few dependencies.
+1. Install Nim.
 
-2. Install Nim, now works with 1.2.
+2. Clone this repo. Then run `nimble install` in it.
 
-3. Clone this repo. Then run `nimble install` in it.
-
-4. Finally run all tests using `cd tests && ./run.sh` (runjs.sh is for running them in nodejs, but not fully green right now). Tests should be green for **Nim 1.2.0**.
+3. Finally run all tests using `nimble test` (runjs.sh is for running them in nodejs, but not fully green right now).
