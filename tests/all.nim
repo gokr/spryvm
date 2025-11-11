@@ -1,3 +1,5 @@
+{.warning[UnusedImport]:off.}
+
 import testspryvm
 import testsprycore
 import testsprymath
