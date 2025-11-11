@@ -125,7 +125,7 @@ proc addParserExtension*(ext: ParserExt) =
   parserExts.add(ext)
 
 # spry representations
-method `$`*(self: Node): string =
+method `$`*(self: Node): string {.base.} =
   # Fallback if missing
   when defined(js):
     echo "repr not available in js"
@@ -223,10 +223,10 @@ method `$`*(self: KeyWord): string =
     result = result & self.keys[i] & " " & $self.args[i]
 
 # Hash and == implementations
-method hash*(self: Node): Hash =
+method hash*(self: Node): Hash {.base.} =
   raiseRuntimeException("Nodes need to implement hash")
 
-method `==`*(self: Node, other: Node): bool {.noSideEffect.} =
+method `==`*(self: Node, other: Node): bool {.base, noSideEffect.} =
   # Fallback to identity check
   #system.`==`(self, other)
   raiseRuntimeException("Nodes need to implement ==")
@@ -274,7 +274,7 @@ method hash*(self: TrueVal): Hash =
 method hash*(self: FalseVal): Hash =
   hash(0)
 
-method value*(self: BoolVal): bool =
+method value*(self: BoolVal): bool {.base.} =
   true
 
 method value*(self: FalseVal): bool =
@@ -315,7 +315,7 @@ method `==`*(self: Blok, other: Node): bool =
 
 
 # Human string representations
-method print*(self: Node): string =
+method print*(self: Node): string {.base.} =
   # Default is to use $
   $self
 
@@ -460,7 +460,7 @@ proc contains*(self: SeqComposite, n: Node): bool =
 proc contains*(self: Map, n: Node): bool =
   self.bindings.hasKey(n)
 
-method concat*(self: SeqComposite, nodes: seq[Node]): SeqComposite =
+method concat*(self: SeqComposite, nodes: seq[Node]): SeqComposite {.base.} =
   raiseRuntimeException("Should not happen..." & $self & " " & $nodes)
 
 method concat*(self: Blok, nodes: seq[Node]): SeqComposite =
@@ -481,7 +481,7 @@ proc removeFirst*(self: SeqComposite) =
 proc removeAt*(self: SeqComposite, index: int) =
   system.delete(self.nodes, index)
 
-method clone*(self: Node): Node =
+method clone*(self: Node): Node {.base.} =
   raiseRuntimeException("Should not happen..." & $self)
 
 method clone*(self: Value): Node =
@@ -504,7 +504,7 @@ method clone*(self: Curly): Node =
   newCurly(self.nodes)
 
 # Methods for the base value parsers
-method parseValue*(self: ValueParser, s: string): Node {.procvar.} =
+method parseValue*(self: ValueParser, s: string): Node {.base, procvar.} =
   nil
 
 method parseValue*(self: IntValueParser, s: string): Node {.procvar.} =
@@ -526,16 +526,16 @@ method parseValue(self: StringValueParser, s: string): Node {.procvar.} =
   if s.len > 1 and s[0] == '"' and s[^1] == '"':
     result = newValue(unescape(s))
 
-method prefixLength(self: ValueParser): int = 0
+method prefixLength(self: ValueParser): int {.base.} = 0
 
 method tokenReady(self: ValueParser, token: string, ch: char): Option[
-    string] =
+    string] {.base.} =
   ## Return true if self wants to take over parsing a literal
   ## and deciding when its complete. This is used for delimited literals
   ## that can contain whitespace. Otherwise parseValue is needed.
   nil
 
-method tokenStart(self: ValueParser, token: string, ch: char): bool =
+method tokenStart(self: ValueParser, token: string, ch: char): bool {.base.} =
   false
 
 method prefixLength(self: StringValueParser): int = 1
@@ -871,8 +871,8 @@ type
 proc funk*(spry: Interpreter, body: Blok): Node
 proc meth*(spry: Interpreter, body: Blok): Node
 proc evalRoot*(spry: Interpreter, code: string): Node
-method eval*(self: Node, spry: Interpreter): Node
-method evalDo*(self: Node, spry: Interpreter): Node
+method eval*(self: Node, spry: Interpreter): Node {.base.}
+method evalDo*(self: Node, spry: Interpreter): Node {.base.}
 
 # String representations
 method `$`*(self: PrimFunc): string =
@@ -1037,7 +1037,7 @@ iterator callerWalk*(first: Activation): Activation =
         activation = activation.parent
 
 # Methods supporting the Nim math primitives with coercions
-method `+`*(a: Node, b: Node): Node {.inline.} =
+method `+`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " + " & $b)
 method `+`*(a: IntVal, b: IntVal): Node {.inline.} =
   newValue(a.value + b.value)
@@ -1048,7 +1048,7 @@ method `+`*(a: FloatVal, b: IntVal): Node {.inline.} =
 method `+`*(a: FloatVal, b: FloatVal): Node {.inline.} =
   newValue(a.value + b.value)
 
-method `-`*(a: Node, b: Node): Node {.inline.} =
+method `-`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " - " & $b)
 method `-`*(a: IntVal, b: IntVal): Node {.inline.} =
   newValue(a.value - b.value)
@@ -1059,7 +1059,7 @@ method `-`*(a: FloatVal, b: IntVal): Node {.inline.} =
 method `-`*(a: FloatVal, b: FloatVal): Node {.inline.} =
   newValue(a.value - b.value)
 
-method `*`*(a: Node, b: Node): Node {.inline.} =
+method `*`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " * " & $b)
 method `*`*(a: IntVal, b: IntVal): Node {.inline.} =
   newValue(a.value * b.value)
@@ -1070,11 +1070,11 @@ method `*`*(a: FloatVal, b: IntVal): Node {.inline.} =
 method `*`*(a: FloatVal, b: FloatVal): Node {.inline.} =
   newValue(a.value * b.value)
 
-method `/`*(a: Node, b: Node): Node {.inline.} =
+method `/`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " / " & $b)
 method `/`*(a: IntVal, b: IntVal): Node {.inline.} =
-  let result = a.value.float / b.value.float
-  newValue((result * 1000.0 + 0.5).int.float / 1000.0)
+  let quotient = a.value.float / b.value.float
+  newValue((quotient * 1000.0 + 0.5).int.float / 1000.0)
 method `/`*(a: IntVal, b: FloatVal): Node {.inline.} =
   newValue(a.value.float / b.value)
 method `/`*(a: FloatVal, b: IntVal): Node {.inline.} =
@@ -1082,7 +1082,7 @@ method `/`*(a: FloatVal, b: IntVal): Node {.inline.} =
 method `/`*(a, b: FloatVal): Node {.inline.} =
   newValue(a.value / b.value)
 
-method `<`*(a: Node, b: Node): Node {.inline.} =
+method `<`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " < " & $b)
 method `<`*(a: IntVal, b: IntVal): Node {.inline.} =
   newValue(a.value < b.value)
@@ -1095,7 +1095,7 @@ method `<`*(a, b: FloatVal): Node {.inline.} =
 method `<`*(a, b: StringVal): Node {.inline.} =
   newValue(a.value < b.value)
 
-method `<=`*(a: Node, b: Node): Node {.inline.} =
+method `<=`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " <= " & $b)
 method `<=`*(a: IntVal, b: IntVal): Node {.inline.} =
   newValue(a.value <= b.value)
@@ -1108,7 +1108,7 @@ method `<=`*(a, b: FloatVal): Node {.inline.} =
 method `<=`*(a, b: StringVal): Node {.inline.} =
   newValue(a.value <= b.value)
 
-method `eq`*(a: Node, b: Node): Node =
+method `eq`*(a: Node, b: Node): Node {.base.} =
   raiseRuntimeException("Can not evaluate " & $a & " == " & $b)
 method `eq`*(a: IntVal, b: IntVal): Node {.inline.} =
   newValue(a.value == b.value)
@@ -1131,7 +1131,7 @@ method `eq`*(a, b: NilVal): Node {.inline.} = TrueVal()
 method `eq`*(a: Node, b: NilVal): Node {.inline.} = FalseVal()
 
 
-method `&`*(a: Node, b: Node): Node {.inline.} =
+method `&`*(a: Node, b: Node): Node {.base, inline.} =
   raiseRuntimeException("Can not evaluate " & $a & " & " & $b)
 method `&`*(a, b: StringVal): Node {.inline.} =
   newValue(a.value & b.value)
@@ -1172,7 +1172,7 @@ proc back*(self: Activation): Node =
   else:
     return self[self.pos - 1]
 
-method doReturn*(self: Activation, spry: Interpreter) =
+method doReturn*(self: Activation, spry: Interpreter) {.base.} =
   spry.currentActivation = self.parent
   if spry.currentActivation.notNil:
     spry.currentActivation.returned = true
@@ -1181,13 +1181,13 @@ method doReturn*(self: FunkActivation, spry: Interpreter) =
   # We don't set returned = true - this will stop the return search
   spry.currentActivation = self.parent
 
-method isObject(self: Node, spry: Interpreter): bool =
+method isObject(self: Node, spry: Interpreter): bool {.base.} =
   false
 
 method isObject(self: Map, spry: Interpreter): bool =
   self.tags.notNil and self.tags.contains(spry.objectTag)
 
-method lookup*(self: Activation, key: Node): Binding =
+method lookup*(self: Activation, key: Node): Binding {.base.} =
   # Base implementation needed for dynamic dispatch to work
   nil
 
@@ -1195,7 +1195,7 @@ method lookup*(self: BlokActivation, key: Node): Binding =
   if self.locals.notNil:
     return self.locals.lookup(key)
 
-method contains*(self: Activation, key: Node): bool =
+method contains*(self: Activation, key: Node): bool {.base.} =
   # Base implementation needed for dynamic dispatch to work
   nil
 
@@ -1250,20 +1250,20 @@ proc lookupParent(spry: Interpreter, key: Node): Binding =
     else:
       inParent = true
 
-method makeBinding(self: Activation, key, val: Node): Binding =
+method makeBinding(self: Activation, key, val: Node): Binding {.base.} =
   raiseRuntimeException("This activation should not be called with makeBinding")
 
 method makeBinding(self: BlokActivation, key, val: Node): Binding =
   self.getLocals().makeBinding(key, val)
 
-method assignBinding(self: Activation, key, val: Node): Binding =
+method assignBinding(self: Activation, key, val: Node): Binding {.base.} =
   raiseRuntimeException("This activation should not be called with assignBinding")
 
 method assignBinding(self: BlokActivation, key, val: Node): Binding =
   self.getLocals().assignBinding(key, val)
 
 
-method makeBindingInMap(spry: Interpreter, key, val: Node): Binding =
+method makeBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
   # Bind in first activation with locals
   for activation in mapWalk(spry.currentActivation):
     return BlokActivation(activation).getLocals().makeBinding(key, val)
@@ -1282,7 +1282,7 @@ method makeBindingInMap(spry: Interpreter, key: EvalModuleWord,
     if module.notNil:
       return Map(module).makeBinding(newEvalWord(key.word), val)
 
-method assignBindingInMap(spry: Interpreter, key, val: Node): Binding =
+method assignBindingInMap(spry: Interpreter, key, val: Node): Binding {.base.} =
   # Bind in first activation with locals where we find an existing binding
   for activation in mapWalk(spry.currentActivation):
     if activation.contains(key):
@@ -1376,7 +1376,7 @@ proc funk*(spry: Interpreter, body: Blok): Node =
 proc meth*(spry: Interpreter, body: Blok): Node =
   newMeth(body, spry.currentActivation)
 
-method isMethod*(self: Node, spry: Interpreter): bool =
+method isMethod*(self: Node, spry: Interpreter): bool {.base.} =
   false
 
 method isMethod*(self: PrimMeth, spry: Interpreter): bool =
@@ -1395,7 +1395,7 @@ method isMethod*(self: EvalWord, spry: Interpreter): bool =
   else:
     return binding.val.isMethod(spry)
 
-method canEval*(self: Node, spry: Interpreter): bool =
+method canEval*(self: Node, spry: Interpreter): bool {.base.} =
   false
 
 method canEval*(self: EvalWord, spry: Interpreter): bool =
