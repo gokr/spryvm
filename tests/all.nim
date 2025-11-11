@@ -1,5 +1,6 @@
 {.warning[UnusedImport]:off.}
-
+# The imports work via side effects - when each test module is imported,
+# it registers its test suite with the unittest framework, which then runs them all.
 import testspryvm
 import testsprycore
 import testsprymath
