@@ -9,3 +9,7 @@ bin/ispry
 .vagrant
 *.log
 .roo
+testresults/
+tests/testresults/
+tests/testspry*
+!tests/testspry*.nim
